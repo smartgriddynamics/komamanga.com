@@ -11,7 +11,13 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    
     <style>
+        /* YOUR ORIGINAL CSS - COMPLETELY UNCHANGED */
         * {
             margin: 0;
             padding: 0;
@@ -148,6 +154,7 @@
         .nav-links {
             display: flex;
             gap: 2rem;
+            align-items: center;
         }
 
         .nav-links a {
@@ -190,6 +197,34 @@
             background: rgba(79, 159, 255, 0.4);
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* User info for logged in admins */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-email {
+            color: #4f9fff;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+            color: white;
         }
 
         /* Main content */
@@ -414,7 +449,7 @@
             }
         }
 
-        /* Stats section */
+        /* Stats section - NOW WITH REAL DATA */
         .stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -597,7 +632,7 @@
             box-shadow: 0 10px 20px rgba(79,159,255,0.3);
         }
 
-        /* Live machines preview */
+        /* Live machines preview - NOW WITH REAL DATA */
         .live-preview {
             padding: 6rem 0;
         }
@@ -635,9 +670,18 @@
             padding: 0.3rem 1rem;
             border-radius: 20px;
             font-size: 0.8rem;
+        }
+
+        .machine-status.online {
             background: rgba(46, 204, 113, 0.2);
             border: 1px solid #2ecc71;
             color: #2ecc71;
+        }
+
+        .machine-status.maintenance {
+            background: rgba(241, 196, 15, 0.2);
+            border: 1px solid #f1c40f;
+            color: #f1c40f;
         }
 
         .machine-status.offline {
@@ -678,6 +722,44 @@
         @keyframes shine {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
+        }
+
+        /* Loading state */
+        .loading-machines {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #4f9fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty state */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            opacity: 0.5;
+            margin-bottom: 1rem;
         }
 
         /* CTA Section */
@@ -772,6 +854,139 @@
             margin-top: 2rem;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Modal styles for login/register/add device */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 3rem;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            animation: modalPop 0.3s ease-out;
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal h2 {
+            margin-bottom: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .modal-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #4f9fff;
+        }
+
+        .modal-select {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .modal-select option {
+            background: #1a3a5f;
+        }
+
+        .modal-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #4f9fff, #a45eff);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .modal-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .modal-footer {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .modal-footer a {
+            color: #4f9fff;
+            text-decoration: none;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
         }
 
         /* Responsive design */
@@ -881,7 +1096,11 @@
             <a href="#how-it-works">How It Works</a>
             <a href="#machines">Machines</a>
             <a href="#contact">Contact</a>
-            <a href="#" class="admin-btn" onclick="showLogin()">
+            <div id="userInfo" style="display: none;" class="user-info">
+                <span class="user-email" id="userEmail"></span>
+                <span class="logout-btn" onclick="logout()">Logout</span>
+            </div>
+            <a href="#" class="admin-btn" onclick="showLoginModal()" id="loginBtn">
                 <i class="fas fa-user-shield"></i> Admin
             </a>
         </div>
@@ -905,8 +1124,8 @@
                         Real-time monitoring, automated collections, and seamless management.
                     </p>
                     <div class="hero-buttons">
-                        <a href="#" class="btn btn-primary">
-                            <i class="fas fa-rocket"></i> Get Started
+                        <a href="#machines" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View Live Machines
                         </a>
                         <a href="#" class="btn btn-outline">
                             <i class="fas fa-play"></i> Watch Demo
@@ -923,22 +1142,22 @@
             </div>
         </section>
 
-        <!-- Stats section -->
+        <!-- Stats section - NOW WITH REAL FIREBASE DATA -->
         <div class="stats">
             <div class="stat-item">
-                <div class="stat-number" data-target="1000">0</div>
+                <div class="stat-number" id="totalMachines">0</div>
                 <div class="stat-label">Machines Deployed</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" data-target="50000">0</div>
-                <div class="stat-label">Liters Daily</div>
+                <div class="stat-number" id="dailyLiters">0</div>
+                <div class="stat-label">Liters Today</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" data-target="98">0%</div>
+                <div class="stat-number" id="uptime">0%</div>
                 <div class="stat-label">Uptime</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" data-target="24">0/7</div>
+                <div class="stat-number" id="support">24/7</div>
                 <div class="stat-label">Support</div>
             </div>
         </div>
@@ -952,7 +1171,7 @@
                         <i class="fas fa-microchip"></i>
                     </div>
                     <h3>Smart Technology</h3>
-                    <p>ESP32-powered machines with real-time monitoring and instant data sync to the cloud.</p>
+                    <p>ESP32-powered machines with real-time monitoring and instant data sync to Firebase.</p>
                 </div>
                 <div class="feature-card" data-tilt>
                     <div class="feature-icon">
@@ -1014,11 +1233,15 @@
             </div>
         </section>
 
-        <!-- Live machines preview -->
+        <!-- Live machines preview - NOW WITH REAL FIREBASE DATA -->
         <section id="machines" class="live-preview">
             <h2 class="section-title">Live Machine Status</h2>
             <div class="machine-cards" id="machinePreviews">
-                <!-- Will be populated with JavaScript -->
+                <!-- Will be populated with REAL Firebase data -->
+                <div class="loading-machines">
+                    <div class="spinner"></div>
+                    <p>Connecting to Komamanga network...</p>
+                </div>
             </div>
         </section>
 
@@ -1078,7 +1301,77 @@
         </div>
     </footer>
 
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideLoginModal()">&times;</span>
+            <h2>Admin Login</h2>
+            <div id="loginError" class="error-message"></div>
+            <input type="email" id="loginEmail" class="modal-input" placeholder="Email" required>
+            <input type="password" id="loginPassword" class="modal-input" placeholder="Password" required>
+            <button class="modal-button" onclick="login()">Login</button>
+            <div class="modal-footer">
+                <a href="#" onclick="showRegisterModal()">Create Account</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideRegisterModal()">&times;</span>
+            <h2>Create Account</h2>
+            <div id="registerError" class="error-message"></div>
+            <input type="text" id="registerName" class="modal-input" placeholder="Full Name" required>
+            <input type="email" id="registerEmail" class="modal-input" placeholder="Email" required>
+            <input type="password" id="registerPassword" class="modal-input" placeholder="Password" required>
+            <button class="modal-button" onclick="register()">Register</button>
+            <div class="modal-footer">
+                <a href="#" onclick="showLoginModal()">Back to Login</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Device Modal (Admin Only) -->
+    <div class="modal" id="addDeviceModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideAddDeviceModal()">&times;</span>
+            <h2><i class="fas fa-plus-circle"></i> Add New Machine</h2>
+            <div id="addError" class="error-message"></div>
+            
+            <input type="text" id="deviceId" class="modal-input" placeholder="Machine ID (e.g., MACHINE_001)" required>
+            <input type="text" id="deviceName" class="modal-input" placeholder="Machine Name" required>
+            <input type="text" id="deviceLocation" class="modal-input" placeholder="Location" required>
+            <select id="deviceStatus" class="modal-select">
+                <option value="online">Online (Active)</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="offline">Offline</option>
+            </select>
+            
+            <button class="modal-button" onclick="addDevice()">
+                <i class="fas fa-save"></i> Add Machine
+            </button>
+        </div>
+    </div>
+
     <script>
+        // Firebase Configuration - YOUR ACTUAL CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVPL8RsRWWUHI4cenvmZ6HgIe4BEob9fM",
+            authDomain: "komamanga.firebaseapp.com",
+            projectId: "komamanga",
+            databaseURL: "https://komamanga-default-rtdb.firebaseio.com",
+            storageBucket: "komamanga.firebasestorage.app",
+            messagingSenderId: "909091747954",
+            appId: "1:909091747954:web:c8fa5a8af2d89e48e0aaeb",
+            measurementId: "G-S1V1WFPV8Q"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
         // Loading animation
         window.addEventListener('load', function() {
             setTimeout(function() {
@@ -1131,41 +1424,6 @@
             });
         });
 
-        // Counter animation
-        function animateNumbers() {
-            const counters = document.querySelectorAll('.stat-number');
-            const speed = 200;
-
-            counters.forEach(counter => {
-                const updateCount = () => {
-                    const target = parseInt(counter.getAttribute('data-target'));
-                    const count = parseInt(counter.innerText);
-                    
-                    const increment = Math.trunc(target / speed);
-                    
-                    if (count < target) {
-                        counter.innerText = Math.min(count + increment, target) + (target === 98 ? '%' : '');
-                        setTimeout(updateCount, 10);
-                    } else {
-                        counter.innerText = target + (target === 98 ? '%' : '');
-                    }
-                };
-                
-                updateCount();
-            });
-        }
-
-        // Trigger counter animation when stats section is visible
-        const statsSection = document.querySelector('.stats');
-        let animated = false;
-
-        window.addEventListener('scroll', () => {
-            if (!animated && statsSection.getBoundingClientRect().top < window.innerHeight - 100) {
-                animateNumbers();
-                animated = true;
-            }
-        });
-
         // 3D tilt effect
         document.querySelectorAll('[data-tilt]').forEach(card => {
             card.addEventListener('mousemove', function(e) {
@@ -1187,55 +1445,278 @@
             });
         });
 
-        // Simulate live machine data
-        function updateMachinePreviews() {
-            const machines = [
-                { name: 'Downtown Hub', location: 'Main Street', status: 'online', water: 85, revenue: 125.50 },
-                { name: 'Central Park', location: 'Park Avenue', status: 'online', water: 92, revenue: 89.75 },
-                { name: 'Tech Plaza', location: 'Silicon Avenue', status: 'maintenance', water: 45, revenue: 210.25 },
-                { name: 'Beach Front', location: 'Ocean Drive', status: 'online', water: 78, revenue: 167.80 }
-            ];
+        // 🔥 LOAD REAL MACHINES FROM FIREBASE
+        function loadMachinesFromFirebase() {
+            const machinesRef = database.ref('machines');
+            
+            machinesRef.on('value', (snapshot) => {
+                const machines = snapshot.val();
+                const container = document.getElementById('machinePreviews');
+                
+                // Show loading state
+                if (!machines || Object.keys(machines).length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-water"></i>
+                            <h3>No Machines Yet</h3>
+                            <p>Our first smart water vending machines are coming soon!</p>
+                        </div>
+                    `;
+                    
+                    // Update stats
+                    document.getElementById('totalMachines').textContent = '0';
+                    document.getElementById('dailyLiters').textContent = '0';
+                    document.getElementById('uptime').textContent = '0%';
+                    return;
+                }
 
-            const container = document.getElementById('machinePreviews');
-            container.innerHTML = machines.map(machine => `
-                <div class="machine-preview">
-                    <div class="machine-header">
-                        <h3>${machine.name}</h3>
-                        <span class="machine-status ${machine.status === 'online' ? '' : 'offline'}">
-                            ${machine.status === 'online' ? '● Live' : '○ ' + machine.status}
-                        </span>
+                let totalActive = 0;
+                let totalLiters = 0;
+
+                // Build HTML for each machine
+                let machinesHtml = '';
+                Object.keys(machines).forEach(machineId => {
+                    const machine = machines[machineId];
+                    
+                    // Update totals
+                    if (machine.status === 'online') totalActive++;
+                    totalLiters += machine.waterSoldToday || 0;
+
+                    machinesHtml += `
+                        <div class="machine-preview" onclick="viewMachineDetails('${machineId}')">
+                            <div class="machine-header">
+                                <h3>${machine.name || machineId}</h3>
+                                <span class="machine-status ${machine.status || 'offline'}">
+                                    ${machine.status === 'online' ? '● Live' : '○ ' + (machine.status || 'offline')}
+                                </span>
+                            </div>
+                            <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">
+                                <i class="fas fa-map-marker-alt"></i> ${machine.location || 'Location not set'}
+                            </p>
+                            <div class="water-bar">
+                                <div class="water-fill" style="width: ${machine.waterLevel || 0}%"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+                                <span><i class="fas fa-tint"></i> ${machine.waterLevel || 0}% full</span>
+                                <span><i class="fas fa-dollar-sign"></i> ${(machine.revenueToday || 0).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Add empty slots for visual balance (optional)
+                const machineCount = Object.keys(machines).length;
+                if (machineCount === 1) {
+                    machinesHtml += `
+                        <div class="machine-preview" style="opacity: 0.3; border: 2px dashed rgba(255,255,255,0.2);">
+                            <div style="display: flex; align-items: center; justify-content: center; height: 200px;">
+                                <p>More machines coming soon</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = machinesHtml;
+
+                // Update stats
+                document.getElementById('totalMachines').textContent = Object.keys(machines).length;
+                document.getElementById('dailyLiters').textContent = totalLiters;
+                
+                // Calculate uptime
+                const totalMachines = Object.keys(machines).length;
+                const uptime = totalMachines > 0 ? Math.round((totalActive / totalMachines) * 100) : 0;
+                document.getElementById('uptime').textContent = uptime + '%';
+
+            }, (error) => {
+                console.error('Firebase error:', error);
+                document.getElementById('machinePreviews').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Connection Error</h3>
+                        <p>Unable to connect to Komamanga network. Please refresh.</p>
                     </div>
-                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">
-                        <i class="fas fa-map-marker-alt"></i> ${machine.location}
-                    </p>
-                    <div class="water-bar">
-                        <div class="water-fill" style="width: ${machine.water}%"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
-                        <span><i class="fas fa-tint"></i> ${machine.water}% full</span>
-                        <span><i class="fas fa-dollar-sign"></i> ${machine.revenue}</span>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            });
         }
 
-        // Update previews every 5 seconds
-        updateMachinePreviews();
-        setInterval(updateMachinePreviews, 5000);
+        // View machine details (for future)
+        function viewMachineDetails(machineId) {
+            if (auth.currentUser) {
+                alert('Machine details page coming soon!');
+            }
+        }
 
-        // Parallax effect on scroll
+        // Auth state observer
+        auth.onAuthStateChanged((user) => {
+            const loginBtn = document.getElementById('loginBtn');
+            const userInfo = document.getElementById('userInfo');
+            const userEmail = document.getElementById('userEmail');
+            
+            if (user) {
+                // User is logged in
+                loginBtn.style.display = 'none';
+                userInfo.style.display = 'flex';
+                userEmail.textContent = user.email;
+                
+                // Add "Add Device" button to nav if not already there
+                const navLinks = document.querySelector('.nav-links');
+                if (!document.getElementById('addDeviceNavBtn')) {
+                    const addBtn = document.createElement('a');
+                    addBtn.href = '#';
+                    addBtn.id = 'addDeviceNavBtn';
+                    addBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Device';
+                    addBtn.onclick = (e) => {
+                        e.preventDefault();
+                        showAddDeviceModal();
+                    };
+                    // Insert before the user info
+                    navLinks.insertBefore(addBtn, userInfo);
+                }
+            } else {
+                // User is logged out
+                loginBtn.style.display = 'block';
+                userInfo.style.display = 'none';
+                
+                // Remove add device button
+                const addBtn = document.getElementById('addDeviceNavBtn');
+                if (addBtn) addBtn.remove();
+            }
+        });
+
+        // Login function
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                hideLoginModal();
+                errorDiv.textContent = '';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        // Register function
+        async function register() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorDiv = document.getElementById('registerError');
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({ displayName: name });
+                
+                // Save to database
+                await database.ref('users/' + userCredential.user.uid).set({
+                    name: name,
+                    email: email,
+                    createdAt: Date.now()
+                });
+                
+                hideRegisterModal();
+                showLoginModal();
+                errorDiv.textContent = '';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        // Add device function
+        async function addDevice() {
+            const deviceId = document.getElementById('deviceId').value.trim();
+            const deviceName = document.getElementById('deviceName').value.trim();
+            const deviceLocation = document.getElementById('deviceLocation').value.trim();
+            const deviceStatus = document.getElementById('deviceStatus').value;
+            const errorDiv = document.getElementById('addError');
+
+            if (!deviceId || !deviceName || !deviceLocation) {
+                errorDiv.textContent = 'All fields are required';
+                return;
+            }
+
+            // Check if ID exists
+            const snapshot = await database.ref('machines/' + deviceId).once('value');
+            if (snapshot.exists()) {
+                errorDiv.textContent = 'Machine ID already exists';
+                return;
+            }
+
+            try {
+                await database.ref('machines/' + deviceId).set({
+                    name: deviceName,
+                    location: deviceLocation,
+                    status: deviceStatus,
+                    waterLevel: 100,
+                    waterSoldToday: 0,
+                    revenueToday: 0,
+                    lastUpdate: Date.now(),
+                    createdAt: Date.now()
+                });
+
+                // Clear and close
+                document.getElementById('deviceId').value = '';
+                document.getElementById('deviceName').value = '';
+                document.getElementById('deviceLocation').value = '';
+                hideAddDeviceModal();
+                alert('✅ Machine added successfully!');
+
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        // Logout
+        function logout() {
+            auth.signOut();
+        }
+
+        // Modal functions
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('loginError').textContent = '';
+        }
+
+        function showRegisterModal() {
+            hideLoginModal();
+            document.getElementById('registerModal').classList.add('active');
+        }
+
+        function hideRegisterModal() {
+            document.getElementById('registerModal').classList.remove('active');
+            document.getElementById('registerError').textContent = '';
+        }
+
+        function showAddDeviceModal() {
+            document.getElementById('addDeviceModal').classList.add('active');
+        }
+
+        function hideAddDeviceModal() {
+            document.getElementById('addDeviceModal').classList.remove('active');
+            document.getElementById('addError').textContent = '';
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        // Parallax effect
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
             document.querySelector('.shape-1').style.transform = `translateY(${scrolled * 0.3}px)`;
             document.querySelector('.shape-2').style.transform = `translateY(${scrolled * -0.2}px)`;
         });
 
-        // Show login modal (placeholder)
-        function showLogin() {
-            alert('Admin dashboard coming soon! This will be your secure login page.');
-        }
-
-        // Water drop ripple effect on click
+        // Water drop ripple effect
         document.addEventListener('click', function(e) {
             const ripple = document.createElement('div');
             ripple.style.position = 'fixed';
@@ -1254,7 +1735,9 @@
                 ripple.remove();
             }, 1000);
         });
+
+        // Start loading machines
+        loadMachinesFromFirebase();
     </script>
 </body>
-
 </html>
