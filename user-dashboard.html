@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komamanga | User Dashboard</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0a1928 0%, #1a3a5f 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .cursor {
+            width: 8px;
+            height: 8px;
+            background: #4f9fff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-follower {
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(79, 159, 255, 0.3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: all 0.2s ease;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            padding: 1rem 2rem;
+            background: rgba(10, 25, 40, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 50px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4f9fff;
+        }
+
+        .user-email {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 2rem 2rem;
+        }
+
+        .welcome {
+            margin-bottom: 2rem;
+        }
+
+        .welcome h1 {
+            font-size: 2.5rem;
+            font-weight: 500;
+            color: #4f9fff;
+        }
+
+        .welcome p {
+            color: #a0aec0;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #4f9fff;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        /* Machine selector */
+        .machine-selector {
+            margin-bottom: 2rem;
+        }
+
+        .machine-select {
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.3);
+            border-radius: 30px;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            width: 300px;
+            cursor: pointer;
+        }
+
+        /* Machine card */
+        .machine-card {
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .machine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .machine-name {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: white;
+        }
+
+        .machine-status {
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+        }
+
+        .status-online {
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        .status-offline {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        .status-maintenance {
+            background: rgba(241, 196, 15, 0.1);
+            border: 1px solid #f1c40f;
+            color: #f1c40f;
+        }
+
+        .machine-location {
+            color: #a0aec0;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .machine-location i {
+            color: #4f9fff;
+            margin-right: 0.5rem;
+        }
+
+        .price-tag {
+            display: inline-block;
+            background: rgba(79, 159, 255, 0.1);
+            border: 1px solid #4f9fff;
+            border-radius: 30px;
+            padding: 0.5rem 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .price-tag i {
+            color: #4f9fff;
+            margin-right: 0.5rem;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-box {
+            background: rgba(10, 25, 40, 0.8);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 15px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-box .period {
+            color: #a0aec0;
+            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-box .revenue {
+            font-size: 1.2rem;
+            color: #4f9fff;
+            font-weight: 600;
+        }
+
+        .stat-box .water {
+            font-size: 1rem;
+            color: #2ecc71;
+        }
+
+        /* Water bar */
+        .water-bar {
+            margin: 1rem 0;
+        }
+
+        .water-bar-label {
+            display: flex;
+            justify-content: space-between;
+            color: #a0aec0;
+            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .water-bar-fill {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .water-fill {
+            height: 100%;
+            background: #4f9fff;
+            border-radius: 4px;
+        }
+
+        /* Chart container */
+        .chart-container {
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        canvas {
+            max-height: 250px;
+            width: 100% !important;
+        }
+
+        /* Transactions */
+        .transactions-list {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .transaction-item {
+            background: rgba(255,255,255,0.05);
+            padding: 0.8rem;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction-item .amount {
+            color: #4f9fff;
+            font-weight: 500;
+        }
+
+        .transaction-item .water {
+            color: #2ecc71;
+        }
+
+        .transaction-item .time {
+            color: #a0aec0;
+            font-size: 0.8rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #a0aec0;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(79,159,255,0.2);
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-follower" id="cursorFollower"></div>
+
+    <nav class="navbar">
+        <div class="logo">KOMAMANGA</div>
+        <div class="nav-links">
+            <span class="user-email" id="userEmail"></span>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="welcome">
+            <h1>Welcome, <span id="userName">User</span>!</h1>
+            <p>Real-time machine statistics - Revenue & Water Usage</p>
+        </div>
+
+        <!-- Overall Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalMachines">0</div>
+                <div class="stat-label">Total Machines</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeMachines">0</div>
+                <div class="stat-label">Active Now</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalWaterToday">0L</div>
+                <div class="stat-label">Water Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalRevenueToday">0 TZS</div>
+                <div class="stat-label">Revenue Today</div>
+            </div>
+        </div>
+
+        <!-- Machine Selector -->
+        <div class="machine-selector">
+            <select id="machineSelect" class="machine-select" onchange="loadMachineDetails()">
+                <option value="">Select a machine to view details</option>
+            </select>
+        </div>
+
+        <!-- Machine Details -->
+        <div id="machineDetails" style="display: none;">
+            <div class="machine-card">
+                <div class="machine-header">
+                    <span class="machine-name" id="detailName"></span>
+                    <span class="machine-status" id="detailStatus"></span>
+                </div>
+                <div class="machine-location">
+                    <i class="fas fa-map-marker-alt"></i> <span id="detailLocation"></span>
+                </div>
+                
+                <div class="price-tag">
+                    <i class="fas fa-tag"></i>
+                    <span id="detailPrice"></span> TZS = <span id="detailLiters"></span> Liters
+                </div>
+
+                <!-- Stats by period -->
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="period">Today</div>
+                        <div class="revenue" id="todayRev">0 TZS</div>
+                        <div class="water" id="todayWater">0L</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="period">This Week</div>
+                        <div class="revenue" id="weekRev">0 TZS</div>
+                        <div class="water" id="weekWater">0L</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="period">This Month</div>
+                        <div class="revenue" id="monthRev">0 TZS</div>
+                        <div class="water" id="monthWater">0L</div>
+                    </div>
+                </div>
+
+                <!-- Water Level -->
+                <div class="water-bar">
+                    <div class="water-bar-label">
+                        <span>Water Level</span>
+                        <span id="waterLevelPercent">0%</span>
+                    </div>
+                    <div class="water-bar-fill">
+                        <div class="water-fill" id="waterFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-row">
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 1rem; color: #4f9fff;">Daily Revenue (This Week)</h3>
+                    <canvas id="revenueDailyChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 1rem; color: #4f9fff;">Daily Water Usage (This Week)</h3>
+                    <canvas id="waterDailyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 1rem; color: #4f9fff;">Weekly Revenue (This Month)</h3>
+                    <canvas id="revenueWeeklyChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 1rem; color: #4f9fff;">Weekly Water Usage (This Month)</h3>
+                    <canvas id="waterWeeklyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1rem; color: #4f9fff;">Recent Transactions</h3>
+                <div class="transactions-list" id="recentTransactions"></div>
+            </div>
+        </div>
+
+        <!-- All Machines Grid -->
+        <h2 style="margin-bottom: 1rem; color: #4f9fff;">All Machines</h2>
+        <div class="stats-grid" id="machinesGrid"></div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Komamanga. All amounts in Tanzanian Shillings (TZS)</p>
+    </footer>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVPL8RsRWWUHI4cenvmZ6HgIe4BEob9fM",
+            authDomain: "komamanga.firebaseapp.com",
+            projectId: "komamanga",
+            databaseURL: "https://komamanga-default-rtdb.firebaseio.com",
+            storageBucket: "komamanga.firebasestorage.app",
+            messagingSenderId: "909091747954",
+            appId: "1:909091747954:web:c8fa5a8af2d89e48e0aaeb"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Chart instances
+        let revenueDailyChart, waterDailyChart, revenueWeeklyChart, waterWeeklyChart;
+
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursorFollower');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            follower.style.left = e.clientX + 'px';
+            follower.style.top = e.clientY + 'px';
+        });
+
+        function formatTZS(amount) {
+            return amount.toLocaleString() + ' TZS';
+        }
+
+        function getMachineStatus(machine) {
+            const now = Date.now();
+            const lastUpdate = machine.lastUpdate || 0;
+            
+            if (machine.adminStatus === 'maintenance') {
+                return { text: 'MAINTENANCE', class: 'status-maintenance' };
+            }
+            
+            if (now - lastUpdate > 300000) {
+                return { text: 'OFFLINE', class: 'status-offline' };
+            }
+            
+            return { text: 'LIVE', class: 'status-online' };
+        }
+
+        // Check authentication
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                database.ref('users/' + user.uid).once('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        document.getElementById('userName').textContent = userData.name || user.email;
+                        document.getElementById('userEmail').textContent = user.email;
+                        loadAllData();
+                    } else {
+                        logout();
+                    }
+                });
+            } else {
+                window.location.href = 'user-login.html';
+            }
+        });
+
+        async function loadAllData() {
+            await loadMachines();
+            await loadMachineSelector();
+            await loadOverallStats();
+        }
+
+        async function loadOverallStats() {
+            const machinesSnap = await database.ref('machines').once('value');
+            const machines = machinesSnap.val() || {};
+            
+            const transactionsSnap = await database.ref('transactions').once('value');
+            const transactions = transactionsSnap.val() || {};
+            
+            const startOfDay = new Date().setHours(0,0,0,0);
+            
+            let totalMachines = 0;
+            let activeMachines = 0;
+            let totalWaterToday = 0;
+            let totalRevenueToday = 0;
+            
+            Object.keys(machines).forEach(id => {
+                totalMachines++;
+                const status = getMachineStatus(machines[id]);
+                if (status.text === 'LIVE') activeMachines++;
+            });
+            
+            Object.keys(transactions).forEach(id => {
+                const t = transactions[id];
+                if (t.timestamp >= startOfDay) {
+                    totalRevenueToday += t.amount || 0;
+                    totalWaterToday += t.waterAmount || 0;
+                }
+            });
+            
+            document.getElementById('totalMachines').textContent = totalMachines;
+            document.getElementById('activeMachines').textContent = activeMachines;
+            document.getElementById('totalWaterToday').textContent = totalWaterToday.toFixed(2) + 'L';
+            document.getElementById('totalRevenueToday').innerHTML = formatTZS(totalRevenueToday);
+        }
+
+        async function loadMachines() {
+            const snapshot = await database.ref('machines').once('value');
+            const machines = snapshot.val() || {};
+            const grid = document.getElementById('machinesGrid');
+            
+            let html = '';
+            
+            Object.keys(machines).forEach(id => {
+                const m = machines[id];
+                const status = getMachineStatus(m);
+                
+                html += `
+                    <div class="stat-card" onclick="selectMachine('${id}')" style="cursor: pointer;">
+                        <div class="stat-value" style="font-size: 1.2rem;">${m.name || id}</div>
+                        <div class="stat-label">
+                            <span class="machine-status ${status.class}" style="margin-right: 0.5rem;">${status.text}</span>
+                            ${m.location || ''}
+                        </div>
+                        <div style="margin-top: 0.5rem; color: #4f9fff;">
+                            ${m.priceAmount || 500} TZS = ${m.priceLiters || 1.0}L
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html || '<div class="stat-card">No machines found</div>';
+        }
+
+        async function loadMachineSelector() {
+            const snapshot = await database.ref('machines').once('value');
+            const machines = snapshot.val() || {};
+            const select = document.getElementById('machineSelect');
+            
+            let options = '<option value="">Select a machine to view details</option>';
+            Object.keys(machines).forEach(id => {
+                options += `<option value="${id}">${machines[id].name || id}</option>`;
+            });
+            select.innerHTML = options;
+        }
+
+        async function loadMachineDetails() {
+            const machineId = document.getElementById('machineSelect').value;
+            if (!machineId) {
+                document.getElementById('machineDetails').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('machineDetails').style.display = 'block';
+
+            const machineSnap = await database.ref('machines/' + machineId).once('value');
+            const machine = machineSnap.val() || {};
+            
+            const status = getMachineStatus(machine);
+            
+            document.getElementById('detailName').textContent = machine.name || machineId;
+            document.getElementById('detailStatus').textContent = status.text;
+            document.getElementById('detailStatus').className = 'machine-status ' + status.class;
+            document.getElementById('detailLocation').textContent = machine.location || 'No location';
+            document.getElementById('detailPrice').textContent = machine.priceAmount || 500;
+            document.getElementById('detailLiters').textContent = (machine.priceLiters || 1.0).toFixed(2);
+            document.getElementById('waterLevelPercent').textContent = (machine.waterLevel || 0) + '%';
+            document.getElementById('waterFill').style.width = (machine.waterLevel || 0) + '%';
+
+            // Load transactions
+            const transactionsSnap = await database.ref('transactions').once('value');
+            const transactions = transactionsSnap.val() || {};
+            
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())).setHours(0,0,0,0);
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+            
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+            
+            let dailyRev = {}, dailyWater = {};
+            let weeklyRev = {}, weeklyWater = {};
+            
+            let todayRev = 0, todayWater = 0;
+            let weekRev = 0, weekWater = 0;
+            let monthRev = 0, monthWater = 0;
+            let transactionsHtml = '';
+
+            Object.keys(transactions).forEach(id => {
+                const t = transactions[id];
+                if (t.machineId !== machineId) return;
+
+                const timestamp = t.timestamp;
+                const amount = t.amount || 0;
+                const water = t.waterAmount || 0;
+
+                if (timestamp >= startOfDay) {
+                    todayRev += amount;
+                    todayWater += water;
+                }
+                
+                if (timestamp >= startOfWeek) {
+                    weekRev += amount;
+                    weekWater += water;
+                    
+                    const day = new Date(timestamp).toLocaleDateString('en-US', { weekday: 'short' });
+                    dailyRev[day] = (dailyRev[day] || 0) + amount;
+                    dailyWater[day] = (dailyWater[day] || 0) + water;
+                }
+                
+                if (timestamp >= startOfMonth) {
+                    monthRev += amount;
+                    monthWater += water;
+                    
+                    const weekNum = Math.ceil((new Date(timestamp).getDate()) / 7);
+                    const week = 'Week ' + weekNum;
+                    weeklyRev[week] = (weeklyRev[week] || 0) + amount;
+                    weeklyWater[week] = (weeklyWater[week] || 0) + water;
+                }
+
+                // Recent transactions (last 10)
+                if (Object.keys(transactions).indexOf(id) < 10) {
+                    transactionsHtml += `
+                        <div class="transaction-item">
+                            <span class="amount">${formatTZS(amount)}</span>
+                            <span class="water">${water.toFixed(2)}L</span>
+                            <span class="time">${new Date(timestamp).toLocaleString()}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            // Update stats
+            document.getElementById('todayRev').innerHTML = formatTZS(todayRev);
+            document.getElementById('todayWater').textContent = todayWater.toFixed(2) + 'L';
+            document.getElementById('weekRev').innerHTML = formatTZS(weekRev);
+            document.getElementById('weekWater').textContent = weekWater.toFixed(2) + 'L';
+            document.getElementById('monthRev').innerHTML = formatTZS(monthRev);
+            document.getElementById('monthWater').textContent = monthWater.toFixed(2) + 'L';
+            
+            document.getElementById('recentTransactions').innerHTML = transactionsHtml || '<p>No transactions</p>';
+
+            // Update charts
+            updateDailyCharts(dailyRev, dailyWater);
+            updateWeeklyCharts(weeklyRev, weeklyWater);
+        }
+
+        function updateDailyCharts(revData, waterData) {
+            const ctxRev = document.getElementById('revenueDailyChart').getContext('2d');
+            const ctxWater = document.getElementById('waterDailyChart').getContext('2d');
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            
+            const revValues = days.map(day => revData[day] || 0);
+            const waterValues = days.map(day => (waterData[day] || 0).toFixed(2));
+
+            if (revenueDailyChart) revenueDailyChart.destroy();
+            if (waterDailyChart) waterDailyChart.destroy();
+
+            revenueDailyChart = new Chart(ctxRev, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Revenue (TZS)',
+                        data: revValues,
+                        backgroundColor: '#4f9fff',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => 'TZS ' + ctx.raw.toLocaleString()
+                            }
+                        }
+                    }
+                }
+            });
+
+            waterDailyChart = new Chart(ctxWater, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Water (Liters)',
+                        data: waterValues,
+                        backgroundColor: '#2ecc71',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ctx.raw + ' Liters'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateWeeklyCharts(revData, waterData) {
+            const ctxRev = document.getElementById('revenueWeeklyChart').getContext('2d');
+            const ctxWater = document.getElementById('waterWeeklyChart').getContext('2d');
+            const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+            
+            const revValues = weeks.map(week => revData[week] || 0);
+            const waterValues = weeks.map(week => (waterData[week] || 0).toFixed(2));
+
+            if (revenueWeeklyChart) revenueWeeklyChart.destroy();
+            if (waterWeeklyChart) waterWeeklyChart.destroy();
+
+            revenueWeeklyChart = new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'Revenue (TZS)',
+                        data: revValues,
+                        borderColor: '#4f9fff',
+                        backgroundColor: 'rgba(79,159,255,0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => 'TZS ' + ctx.raw.toLocaleString()
+                            }
+                        }
+                    }
+                }
+            });
+
+            waterWeeklyChart = new Chart(ctxWater, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'Water (Liters)',
+                        data: waterValues,
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46,204,113,0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ctx.raw + ' Liters'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function selectMachine(id) {
+            document.getElementById('machineSelect').value = id;
+            loadMachineDetails();
+        }
+
+        function logout() {
+            auth.signOut();
+        }
+
+        window.selectMachine = selectMachine;
+        window.loadMachineDetails = loadMachineDetails;
+        window.logout = logout;
+    </script>
+</body>
+</html>

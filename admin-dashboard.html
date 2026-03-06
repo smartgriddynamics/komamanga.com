@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Komamanga | Admin Dashboard</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0a1928 0%, #1a3a5f 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        /* Clean cursor */
+        .cursor {
+            width: 8px;
+            height: 8px;
+            background: #4f9fff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-follower {
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(79, 159, 255, 0.3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: all 0.2s ease;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            padding: 1rem 2rem;
+            background: rgba(10, 25, 40, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 50px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4f9fff;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .admin-email {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 2rem 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            color: #4f9fff;
+            font-weight: 500;
+        }
+
+        .refresh-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(79,159,255,0.3);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(79,159,255,0.1);
+        }
+
+        /* Stats cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #4f9fff;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(79,159,255,0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: #a0aec0;
+            cursor: pointer;
+            font-size: 1rem;
+            position: relative;
+        }
+
+        .tab.active {
+            color: #4f9fff;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #4f9fff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Machine cards */
+        .machines-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .machine-card {
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .machine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .machine-name {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: white;
+        }
+
+        .machine-status {
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+        }
+
+        .status-online {
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        .status-offline {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        .status-maintenance {
+            background: rgba(241, 196, 15, 0.1);
+            border: 1px solid #f1c40f;
+            color: #f1c40f;
+        }
+
+        .machine-location {
+            color: #a0aec0;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .machine-location i {
+            color: #4f9fff;
+            margin-right: 0.5rem;
+        }
+
+        /* Price config card */
+        .price-config-card {
+            background: rgba(79, 159, 255, 0.1);
+            border: 2px solid #4f9fff;
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-config-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #4f9fff;
+            font-size: 1.1rem;
+        }
+
+        .price-input-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .price-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(10, 25, 40, 0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            border: 1px solid rgba(79,159,255,0.3);
+        }
+
+        .price-input-group label {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .price-input-group input {
+            width: 80px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .price-input-group input:focus {
+            outline: none;
+            border-bottom: 1px solid #4f9fff;
+        }
+
+        .price-display {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(10, 25, 40, 0.8);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .price-display span {
+            color: #4f9fff;
+            font-weight: 600;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            gap: 2rem;
+            margin: 1rem 0;
+            padding: 1rem 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-item .label {
+            color: #a0aec0;
+            font-size: 0.8rem;
+        }
+
+        .stat-item .value {
+            font-size: 1.2rem;
+            color: #4f9fff;
+            font-weight: 500;
+        }
+
+        /* Water bar */
+        .water-bar {
+            margin: 1rem 0;
+        }
+
+        .water-bar-label {
+            display: flex;
+            justify-content: space-between;
+            color: #a0aec0;
+            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .water-bar-fill {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .water-fill {
+            height: 100%;
+            background: #4f9fff;
+            border-radius: 3px;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(79,159,255,0.3);
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .btn-small:hover {
+            background: rgba(79,159,255,0.1);
+        }
+
+        .btn-danger {
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: rgba(231,76,60,0.1);
+        }
+
+        .btn-save {
+            background: #4f9fff;
+            border: none;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #3a7bc8;
+        }
+
+        /* Chart container */
+        .chart-container {
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        canvas {
+            max-height: 250px;
+            width: 100% !important;
+        }
+
+        /* Machine selector */
+        .machine-selector {
+            margin-bottom: 2rem;
+        }
+
+        .machine-select {
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.3);
+            border-radius: 30px;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            width: 300px;
+            cursor: pointer;
+        }
+
+        /* Form group */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #a0aec0;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.8rem 1rem;
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .btn {
+            background: #4f9fff;
+            border: none;
+            border-radius: 30px;
+            padding: 0.8rem 2rem;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: #3a7bc8;
+        }
+
+        /* Users list */
+        .users-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .user-item {
+            background: rgba(10, 25, 40, 0.6);
+            border: 1px solid rgba(79, 159, 255, 0.2);
+            border-radius: 15px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #a0aec0;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(79,159,255,0.2);
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .machines-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-follower" id="cursorFollower"></div>
+
+    <nav class="navbar">
+        <div class="logo">KOMAMANGA ADMIN</div>
+        <div class="nav-links">
+            <span class="admin-email" id="adminEmail"></span>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Admin Dashboard</h1>
+            <button class="refresh-btn" onclick="refreshData()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalMachines">0</div>
+                <div class="stat-label">Total Machines</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="onlineMachines">0</div>
+                <div class="stat-label">Online</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalWater">0L</div>
+                <div class="stat-label">Water Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalRevenue">0 TZS</div>
+                <div class="stat-label">Revenue Today</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('machines')">Machines</div>
+            <div class="tab" onclick="switchTab('analytics')">Analytics</div>
+            <div class="tab" onclick="switchTab('add')">Add Machine</div>
+            <div class="tab" onclick="switchTab('users')">Users</div>
+        </div>
+
+        <!-- MACHINES TAB -->
+        <div id="machinesTab" class="tab-content active">
+            <div class="machines-grid" id="machinesList"></div>
+        </div>
+
+        <!-- ANALYTICS TAB -->
+        <div id="analyticsTab" class="tab-content">
+            <div class="machine-selector">
+                <select id="machineSelect" class="machine-select" onchange="loadMachineAnalytics()">
+                    <option value="">Select a machine</option>
+                </select>
+            </div>
+
+            <div id="machineAnalytics" style="display: none;">
+                <!-- Summary Cards -->
+                <div class="stats-grid" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="analyticsTodayRev">0</div>
+                        <div class="stat-label">Revenue Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analyticsTodayWater">0L</div>
+                        <div class="stat-label">Water Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analyticsWeekRev">0</div>
+                        <div class="stat-label">Revenue This Week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analyticsWeekWater">0L</div>
+                        <div class="stat-label">Water This Week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analyticsMonthRev">0</div>
+                        <div class="stat-label">Revenue This Month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analyticsMonthWater">0L</div>
+                        <div class="stat-label">Water This Month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analyticsTotalRev">0</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analyticsTotalWater">0L</div>
+                        <div class="stat-label">Total Water</div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="chart-row">
+                    <div class="chart-container">
+                        <h3 style="margin-bottom: 1rem; color: #4f9fff;">Daily Revenue</h3>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 style="margin-bottom: 1rem; color: #4f9fff;">Daily Water Usage</h3>
+                        <canvas id="waterChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Weekly Chart -->
+                <div class="chart-row">
+                    <div class="chart-container">
+                        <h3 style="margin-bottom: 1rem; color: #4f9fff;">Weekly Revenue</h3>
+                        <canvas id="weeklyRevenueChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 style="margin-bottom: 1rem; color: #4f9fff;">Weekly Water Usage</h3>
+                        <canvas id="weeklyWaterChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 1rem; color: #4f9fff;">Recent Transactions</h3>
+                    <div id="recentTransactions"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADD MACHINE TAB -->
+        <div id="addTab" class="tab-content">
+            <h2 style="margin-bottom: 1.5rem; color: #4f9fff;">Add New Machine</h2>
+            
+            <div class="form-group">
+                <label>Machine ID</label>
+                <input type="text" id="machineId" placeholder="e.g., MACHINE_001">
+            </div>
+            
+            <div class="form-group">
+                <label>Machine Name</label>
+                <input type="text" id="machineName" placeholder="e.g., Downtown Hub">
+            </div>
+            
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="machineLocation" placeholder="e.g., Dar es Salaam">
+            </div>
+            
+            <div class="price-config-card">
+                <div class="price-config-title">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Set Price & Water Amount</span>
+                </div>
+                
+                <div class="price-input-row">
+                    <div class="price-input-group">
+                        <label>TZS</label>
+                        <input type="number" id="configAmount" min="1" value="500">
+                    </div>
+                    <span style="color: #a0aec0;">=</span>
+                    <div class="price-input-group">
+                        <label>Liters</label>
+                        <input type="number" id="configLiters" min="0.1" step="0.1" value="1.0">
+                    </div>
+                </div>
+                
+                <div class="price-display">
+                    <span id="configDisplay">500 TZS = 1.0 Liters</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Admin Control</label>
+                <select id="adminStatus">
+                    <option value="normal">Normal (Auto status)</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="addMachine()">Add Machine</button>
+        </div>
+
+        <!-- USERS TAB -->
+        <div id="usersTab" class="tab-content">
+            <h2 style="margin-bottom: 1.5rem; color: #4f9fff;">Manage Users</h2>
+            
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem;">Create New User</h3>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="userName">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="userEmail">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="text" id="userPassword" value="komamanga123">
+                </div>
+                <button class="btn" onclick="createUser()">Create User</button>
+            </div>
+
+            <h3 style="margin-bottom: 1rem;">Existing Users</h3>
+            <div class="users-list" id="usersList"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Komamanga. All amounts in Tanzanian Shillings (TZS)</p>
+    </footer>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVPL8RsRWWUHI4cenvmZ6HgIe4BEob9fM",
+            authDomain: "komamanga.firebaseapp.com",
+            projectId: "komamanga",
+            databaseURL: "https://komamanga-default-rtdb.firebaseio.com",
+            storageBucket: "komamanga.firebasestorage.app",
+            messagingSenderId: "909091747954",
+            appId: "1:909091747954:web:c8fa5a8af2d89e48e0aaeb"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Chart instances
+        let revenueChart, waterChart, weeklyRevenueChart, weeklyWaterChart;
+
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursorFollower');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            follower.style.left = e.clientX + 'px';
+            follower.style.top = e.clientY + 'px';
+        });
+
+        // Format TZS
+        function formatTZS(amount) {
+            return amount.toLocaleString() + ' TZS';
+        }
+
+        let currentUser = null;
+
+        // Check if admin
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const snapshot = await database.ref('admins/' + user.uid).once('value');
+                if (snapshot.exists()) {
+                    currentUser = user;
+                    document.getElementById('adminEmail').textContent = user.email;
+                    loadAllData();
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Update price display
+        document.getElementById('configAmount').addEventListener('input', updatePriceDisplay);
+        document.getElementById('configLiters').addEventListener('input', updatePriceDisplay);
+
+        function updatePriceDisplay() {
+            const amount = document.getElementById('configAmount').value;
+            const liters = document.getElementById('configLiters').value;
+            document.getElementById('configDisplay').textContent = `${amount} TZS = ${liters} Liters`;
+        }
+
+        // Load all data
+        async function loadAllData() {
+            await loadMachines();
+            await loadUsers();
+            await loadMachineSelector();
+        }
+
+        // Machine status function
+        function getMachineStatus(machine) {
+            const now = Date.now();
+            const lastUpdate = machine.lastUpdate || 0;
+            
+            if (machine.adminStatus === 'maintenance') {
+                return { text: 'MAINTENANCE', class: 'status-maintenance' };
+            }
+            
+            if (now - lastUpdate > 300000) {
+                return { text: 'OFFLINE', class: 'status-offline' };
+            }
+            
+            return { text: 'LIVE', class: 'status-online' };
+        }
+
+        // Load machines
+        async function loadMachines() {
+            const snapshot = await database.ref('machines').once('value');
+            const machines = snapshot.val() || {};
+            const container = document.getElementById('machinesList');
+            
+            let totalCount = 0, onlineCount = 0, totalWater = 0, totalRevenue = 0;
+            let html = '';
+
+            const transactionsSnap = await database.ref('transactions').once('value');
+            const transactions = transactionsSnap.val() || {};
+            const startOfDay = new Date().setHours(0,0,0,0);
+
+            Object.keys(transactions).forEach(id => {
+                const t = transactions[id];
+                if (t.timestamp >= startOfDay) {
+                    totalRevenue += t.amount || 0;
+                    totalWater += t.waterAmount || 0;
+                }
+            });
+
+            Object.keys(machines).forEach(id => {
+                const m = machines[id];
+                totalCount++;
+                
+                const status = getMachineStatus(m);
+                if (status.text === 'LIVE') onlineCount++;
+
+                // Calculate machine's today revenue and water
+                let machineTodayRev = 0, machineTodayWater = 0;
+                Object.keys(transactions).forEach(tid => {
+                    const t = transactions[tid];
+                    if (t.machineId === id && t.timestamp >= startOfDay) {
+                        machineTodayRev += t.amount || 0;
+                        machineTodayWater += t.waterAmount || 0;
+                    }
+                });
+
+                // Get machine price config
+                const priceAmount = m.priceAmount || 500;
+                const priceLiters = m.priceLiters || 1.0;
+
+                html += `
+                    <div class="machine-card">
+                        <div class="machine-header">
+                            <span class="machine-name">${m.name || id}</span>
+                            <span class="machine-status ${status.class}">${status.text}</span>
+                        </div>
+                        <div class="machine-location">
+                            <i class="fas fa-map-marker-alt"></i> ${m.location || 'No location'}
+                        </div>
+                        
+                        <div class="price-config-card" style="padding: 1rem;">
+                            <div class="price-config-title">
+                                <i class="fas fa-tag"></i>
+                                <span>Price Setting</span>
+                            </div>
+                            <div class="price-input-row" style="justify-content: center;">
+                                <div class="price-input-group">
+                                    <label>TZS</label>
+                                    <input type="number" id="price_${id}_amount" value="${priceAmount}" min="1" style="width: 70px;">
+                                </div>
+                                <span style="color: #a0aec0;">=</span>
+                                <div class="price-input-group">
+                                    <label>Liters</label>
+                                    <input type="number" id="price_${id}_liters" value="${priceLiters}" min="0.1" step="0.1" style="width: 70px;">
+                                </div>
+                                <button class="btn-small btn-save" onclick="updateMachinePrice('${id}')">
+                                    <i class="fas fa-save"></i> Set
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="label">Today</div>
+                                <div class="value">${formatTZS(machineTodayRev)}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="label">Water</div>
+                                <div class="value">${machineTodayWater.toFixed(2)}L</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="label">Level</div>
+                                <div class="value">${m.waterLevel || 0}%</div>
+                            </div>
+                        </div>
+
+                        <div class="water-bar">
+                            <div class="water-bar-label">
+                                <span>Water Level</span>
+                                <span>${m.waterLevel || 0}%</span>
+                            </div>
+                            <div class="water-bar-fill">
+                                <div class="water-fill" style="width: ${m.waterLevel || 0}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn-small" onclick="toggleMaintenance('${id}', '${m.adminStatus || 'normal'}')">
+                                <i class="fas fa-tools"></i> ${m.adminStatus === 'maintenance' ? 'Disable' : 'Enable'} Maintenance
+                            </button>
+                            <button class="btn-small btn-danger" onclick="deleteMachine('${id}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            
+            document.getElementById('totalMachines').textContent = totalCount;
+            document.getElementById('onlineMachines').textContent = onlineCount;
+            document.getElementById('totalWater').textContent = totalWater.toFixed(2) + 'L';
+            document.getElementById('totalRevenue').innerHTML = formatTZS(totalRevenue);
+        }
+
+        // Update machine price
+        async function updateMachinePrice(machineId) {
+            const newAmount = parseInt(document.getElementById(`price_${machineId}_amount`).value);
+            const newLiters = parseFloat(document.getElementById(`price_${machineId}_liters`).value);
+            
+            if (newAmount < 1 || newLiters < 0.1) {
+                alert('Please enter valid values');
+                return;
+            }
+            
+            await database.ref('machines/' + machineId).update({
+                priceAmount: newAmount,
+                priceLiters: newLiters,
+                lastPriceUpdate: Date.now()
+            });
+            
+            alert(`✅ Price updated: ${newAmount} TZS = ${newLiters} Liters`);
+            loadMachines();
+        }
+
+        // Toggle maintenance mode
+        async function toggleMaintenance(machineId, currentStatus) {
+            const newStatus = currentStatus === 'maintenance' ? 'normal' : 'maintenance';
+            await database.ref('machines/' + machineId).update({
+                adminStatus: newStatus
+            });
+            loadMachines();
+        }
+
+        // Load machine selector for analytics
+        async function loadMachineSelector() {
+            const snapshot = await database.ref('machines').once('value');
+            const machines = snapshot.val() || {};
+            const select = document.getElementById('machineSelect');
+            
+            let options = '<option value="">Select a machine</option>';
+            Object.keys(machines).forEach(id => {
+                options += `<option value="${id}">${machines[id].name || id}</option>`;
+            });
+            select.innerHTML = options;
+        }
+
+        // Load machine analytics
+        async function loadMachineAnalytics() {
+            const machineId = document.getElementById('machineSelect').value;
+            if (!machineId) {
+                document.getElementById('machineAnalytics').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('machineAnalytics').style.display = 'block';
+
+            // Get machine details
+            const machineSnap = await database.ref('machines/' + machineId).once('value');
+            const machine = machineSnap.val() || {};
+            
+            // Get transactions
+            const transactionsSnap = await database.ref('transactions').once('value');
+            const transactions = transactionsSnap.val() || {};
+            
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())).setHours(0,0,0,0);
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+            
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+            
+            let dailyRev = {}, dailyWater = {};
+            let weeklyRev = {}, weeklyWater = {};
+            
+            let todayRev = 0, todayWater = 0;
+            let weekRev = 0, weekWater = 0;
+            let monthRev = 0, monthWater = 0;
+            let totalRev = 0, totalWater = 0;
+            
+            let recentHtml = '';
+
+            Object.keys(transactions).forEach(id => {
+                const t = transactions[id];
+                if (t.machineId !== machineId) return;
+
+                const timestamp = t.timestamp;
+                const amount = t.amount || 0;
+                const water = t.waterAmount || 0;
+
+                totalRev += amount;
+                totalWater += water;
+
+                if (timestamp >= startOfDay) {
+                    todayRev += amount;
+                    todayWater += water;
+                }
+                
+                if (timestamp >= startOfWeek) {
+                    weekRev += amount;
+                    weekWater += water;
+                    
+                    const day = new Date(timestamp).toLocaleDateString('en-US', { weekday: 'short' });
+                    dailyRev[day] = (dailyRev[day] || 0) + amount;
+                    dailyWater[day] = (dailyWater[day] || 0) + water;
+                }
+                
+                if (timestamp >= startOfMonth) {
+                    monthRev += amount;
+                    monthWater += water;
+                    
+                    const weekNum = Math.ceil((new Date(timestamp).getDate()) / 7);
+                    const week = 'Week ' + weekNum;
+                    weeklyRev[week] = (weeklyRev[week] || 0) + amount;
+                    weeklyWater[week] = (weeklyWater[week] || 0) + water;
+                }
+
+                // Recent transactions (last 10)
+                recentHtml += `
+                    <div style="background: rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 10px; margin-bottom: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>${formatTZS(amount)}</span>
+                            <span>${water.toFixed(2)}L</span>
+                            <span style="color: #a0aec0;">${new Date(timestamp).toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Update summary cards
+            document.getElementById('analyticsTodayRev').innerHTML = formatTZS(todayRev);
+            document.getElementById('analyticsTodayWater').textContent = todayWater.toFixed(2) + 'L';
+            document.getElementById('analyticsWeekRev').innerHTML = formatTZS(weekRev);
+            document.getElementById('analyticsWeekWater').textContent = weekWater.toFixed(2) + 'L';
+            document.getElementById('analyticsMonthRev').innerHTML = formatTZS(monthRev);
+            document.getElementById('analyticsMonthWater').textContent = monthWater.toFixed(2) + 'L';
+            document.getElementById('analyticsTotalRev').innerHTML = formatTZS(totalRev);
+            document.getElementById('analyticsTotalWater').textContent = totalWater.toFixed(2) + 'L';
+            
+            document.getElementById('recentTransactions').innerHTML = recentHtml || '<p>No transactions</p>';
+
+            // Update charts
+            updateDailyCharts(dailyRev, dailyWater);
+            updateWeeklyCharts(weeklyRev, weeklyWater);
+        }
+
+        function updateDailyCharts(revData, waterData) {
+            const ctxRev = document.getElementById('revenueChart').getContext('2d');
+            const ctxWater = document.getElementById('waterChart').getContext('2d');
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            
+            const revValues = days.map(day => revData[day] || 0);
+            const waterValues = days.map(day => (waterData[day] || 0).toFixed(2));
+
+            if (revenueChart) revenueChart.destroy();
+            if (waterChart) waterChart.destroy();
+
+            revenueChart = new Chart(ctxRev, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Revenue (TZS)',
+                        data: revValues,
+                        backgroundColor: '#4f9fff',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => 'TZS ' + ctx.raw.toLocaleString()
+                            }
+                        }
+                    }
+                }
+            });
+
+            waterChart = new Chart(ctxWater, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Water (Liters)',
+                        data: waterValues,
+                        backgroundColor: '#2ecc71',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ctx.raw + ' Liters'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateWeeklyCharts(revData, waterData) {
+            const ctxRev = document.getElementById('weeklyRevenueChart').getContext('2d');
+            const ctxWater = document.getElementById('weeklyWaterChart').getContext('2d');
+            const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+            
+            const revValues = weeks.map(week => revData[week] || 0);
+            const waterValues = weeks.map(week => (waterData[week] || 0).toFixed(2));
+
+            if (weeklyRevenueChart) weeklyRevenueChart.destroy();
+            if (weeklyWaterChart) weeklyWaterChart.destroy();
+
+            weeklyRevenueChart = new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'Revenue (TZS)',
+                        data: revValues,
+                        borderColor: '#4f9fff',
+                        backgroundColor: 'rgba(79,159,255,0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => 'TZS ' + ctx.raw.toLocaleString()
+                            }
+                        }
+                    }
+                }
+            });
+
+            weeklyWaterChart = new Chart(ctxWater, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'Water (Liters)',
+                        data: waterValues,
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46,204,113,0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ctx.raw + ' Liters'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Add machine
+        async function addMachine() {
+            const id = document.getElementById('machineId').value.trim();
+            const name = document.getElementById('machineName').value.trim();
+            const location = document.getElementById('machineLocation').value.trim();
+            const priceAmount = parseInt(document.getElementById('configAmount').value);
+            const priceLiters = parseFloat(document.getElementById('configLiters').value);
+            const adminStatus = document.getElementById('adminStatus').value;
+
+            if (!id || !name || !location) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            const machineCode = 'KM' + Date.now().toString(36).toUpperCase();
+
+            await database.ref('machines/' + id).set({
+                name: name,
+                location: location,
+                priceAmount: priceAmount,
+                priceLiters: priceLiters,
+                adminStatus: adminStatus,
+                machineCode: machineCode,
+                waterLevel: 100,
+                waterSoldToday: 0,
+                todayRevenue: 0,
+                totalCoins: 0,
+                lastUpdate: 0,
+                createdAt: Date.now()
+            });
+
+            alert(`✅ Machine added! Code: ${machineCode}\nPrice: ${priceAmount} TZS = ${priceLiters} Liters`);
+            
+            document.getElementById('machineId').value = '';
+            document.getElementById('machineName').value = '';
+            document.getElementById('machineLocation').value = '';
+            
+            loadAllData();
+            switchTab('machines');
+        }
+
+        // Delete machine
+        async function deleteMachine(id) {
+            if (confirm('Delete this machine?')) {
+                await database.ref('machines/' + id).remove();
+                loadAllData();
+            }
+        }
+
+        // User functions
+        async function createUser() {
+            const name = document.getElementById('userName').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            const password = document.getElementById('userPassword').value.trim();
+
+            if (!name || !email || !password) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            const secondaryApp = firebase.initializeApp(firebaseConfig, "secondary");
+
+            try {
+                const result = await secondaryApp.auth().createUserWithEmailAndPassword(email, password);
+                await database.ref('users/' + result.user.uid).set({
+                    name: name,
+                    email: email,
+                    role: 'user',
+                    createdAt: Date.now()
+                });
+
+                alert('✅ User created!');
+                document.getElementById('userName').value = '';
+                document.getElementById('userEmail').value = '';
+                
+                await secondaryApp.auth().signOut();
+                loadUsers();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                try { await secondaryApp.delete(); } catch (e) {}
+            }
+        }
+
+        async function loadUsers() {
+            const snapshot = await database.ref('users').once('value');
+            const users = snapshot.val() || {};
+            const list = document.getElementById('usersList');
+            
+            let html = '';
+            Object.keys(users).forEach(id => {
+                const u = users[id];
+                html += `
+                    <div class="user-item">
+                        <div>
+                            <div style="font-weight: 500;">${u.name}</div>
+                            <div style="color: #a0aec0;">${u.email}</div>
+                        </div>
+                        <button class="btn-small btn-danger" onclick="deleteUser('${id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html || '<p>No users found</p>';
+        }
+
+        function deleteUser(id) {
+            if (confirm('Delete this user?')) {
+                database.ref('users/' + id).remove().then(() => loadUsers());
+            }
+        }
+
+        // Utility functions
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        function refreshData() {
+            loadAllData();
+        }
+
+        function logout() {
+            auth.signOut();
+        }
+
+        // Make functions global
+        window.switchTab = switchTab;
+        window.addMachine = addMachine;
+        window.updateMachinePrice = updateMachinePrice;
+        window.toggleMaintenance = toggleMaintenance;
+        window.deleteMachine = deleteMachine;
+        window.createUser = createUser;
+        window.deleteUser = deleteUser;
+        window.refreshData = refreshData;
+        window.logout = logout;
+        window.loadMachineAnalytics = loadMachineAnalytics;
+    </script>
+</body>
+</html>

@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Komamanga | Smart Water Vending Solutions - Tanzania</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        /* YOUR ORIGINAL STYLES - COMPLETELY PRESERVED */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0a1928 0%, #1a3a5f 100%);
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Custom cursor */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.1s ease;
+            transform: translate(-50%, -50%);
+            backdrop-filter: blur(2px);
+        }
+
+        .cursor-follower {
+            width: 40px;
+            height: 40px;
+            background: rgba(79, 159, 255, 0.2);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Animated background shapes */
+        .shape {
+            position: fixed;
+            background: rgba(79, 159, 255, 0.1);
+            filter: blur(60px);
+            border-radius: 50%;
+            z-index: -1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+            background: linear-gradient(45deg, #4f9fff, #a45eff);
+        }
+
+        .shape-2 {
+            width: 500px;
+            height: 500px;
+            bottom: -200px;
+            right: -100px;
+            background: linear-gradient(135deg, #00d4ff, #4f9fff);
+        }
+
+        .shape-3 {
+            width: 400px;
+            height: 400px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, #ff6b6b, #ffd93d);
+            opacity: 0.05;
+            animation: pulse 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.05; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.1; }
+        }
+
+        /* Navigation - FULLY RESPONSIVE */
+        .navbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideDown 1s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.8rem 1.5rem;
+                width: 95%;
+            }
+        }
+
+        .logo {
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #4f9fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        /* Mobile menu button */
+        .menu-btn {
+            display: none;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .menu-btn {
+                display: block;
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: rgba(10, 25, 40, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+                border-radius: 30px;
+                border: 1px solid rgba(255,255,255,0.2);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+            padding: 0.5rem 0;
+            transition: all 0.3s ease;
+            font-size: clamp(0.9rem, 4vw, 1rem);
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4f9fff, #a45eff);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::before {
+            width: 100%;
+        }
+
+        .admin-btn {
+            background: rgba(79, 159, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.8rem 1.8rem !important;
+            border-radius: 30px;
+        }
+
+        /* Secret trigger for admin */
+        .secret-trigger {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .secret-trigger:hover {
+            background: rgba(79,159,255,0.3);
+            transform: scale(1.1);
+        }
+
+        /* Main content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 2rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero section - FULLY RESPONSIVE */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 0;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            padding-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2rem;
+            }
+        }
+
+        .hero-text {
+            animation: fadeInLeft 1.5s ease-out;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title span {
+            background: linear-gradient(135deg, #fff, #4f9fff, #a45eff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(79,159,255,0.3)); }
+            50% { filter: drop-shadow(0 0 40px rgba(79,159,255,0.6)); }
+        }
+
+        .hero-description {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .hero-buttons {
+                justify-content: center;
+            }
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            font-size: clamp(0.9rem, 3vw, 1rem);
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f9fff, #a45eff);
+            color: white;
+            box-shadow: 0 10px 20px rgba(79,159,255,0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(79,159,255,0.4);
+        }
+
+        .btn-outline {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-3px);
+            border-color: #4f9fff;
+        }
+
+        /* Hero image */
+        .hero-image {
+            position: relative;
+            animation: fadeInRight 1.5s ease-out;
+        }
+
+        .floating-card {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            transform-style: preserve-3d;
+            animation: floatCard 6s ease-in-out infinite;
+        }
+
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-20px) rotateY(5deg); }
+        }
+
+        .glass-sphere {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(79,159,255,0.2));
+            border-radius: 50%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+        }
+
+        .water-drop {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #4f9fff, #a45eff);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            bottom: 20%;
+            right: 10%;
+            animation: dropFloat 3s ease-in-out infinite;
+            box-shadow: 0 20px 30px rgba(79,159,255,0.3);
+        }
+
+        @keyframes dropFloat {
+            0%, 100% { transform: rotate(-45deg) translateY(0); }
+            50% { transform: rotate(-45deg) translateY(-20px); }
+        }
+
+        .water-ripple {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            bottom: 15%;
+            right: 5%;
+            animation: ripple 3s ease-out infinite;
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* Stats section - UPDATED for machine status only */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin: 6rem 0;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+                padding: 2rem;
+                margin: 3rem 0;
+            }
+        }
+
+        .stat-item {
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .stat-number {
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #4f9fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: rgba(255,255,255,0.7);
+            font-size: clamp(0.8rem, 3vw, 1rem);
+            letter-spacing: 2px;
+        }
+
+        /* Status indicators in stats */
+        .stat-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .indicator-online {
+            background: #2ecc71;
+            box-shadow: 0 0 10px #2ecc71;
+        }
+
+        .indicator-offline {
+            background: #e74c3c;
+            box-shadow: 0 0 10px #e74c3c;
+        }
+
+        .indicator-maintenance {
+            background: #f1c40f;
+            box-shadow: 0 0 10px #f1c40f;
+        }
+
+        /* Features section - FULLY RESPONSIVE */
+        .features {
+            padding: 6rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: clamp(2rem, 6vw, 3rem);
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, #4f9fff, #a45eff);
+            border-radius: 3px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 30px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(79,159,255,0.1), rgba(164,94,255,0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(79,159,255,0.2), rgba(164,94,255,0.2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-icon i {
+            background: linear-gradient(135deg, #fff, #4f9fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+        }
+
+        /* How it works - FULLY RESPONSIVE */
+        .how-it-works {
+            padding: 6rem 0;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .steps {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .steps::before {
+                display: none;
+            }
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #4f9fff, #a45eff, #4f9fff, transparent);
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            background: rgba(10,25,40,0.8);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4f9fff, #a45eff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            box-shadow: 0 10px 20px rgba(79,159,255,0.3);
+        }
+
+        /* Live machines preview - FULLY RESPONSIVE */
+        .live-preview {
+            padding: 6rem 0;
+        }
+
+        .machine-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .machine-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .machine-preview {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 30px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .machine-preview:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+            border-color: #4f9fff;
+        }
+
+        .machine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .machine-header h3 {
+            font-size: 1.3rem;
+        }
+
+        .machine-status {
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .machine-status.online {
+            background: rgba(46,204,113,0.2);
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        .machine-status.maintenance {
+            background: rgba(241,196,15,0.2);
+            border: 1px solid #f1c40f;
+            color: #f1c40f;
+        }
+
+        .machine-status.offline {
+            background: rgba(231,76,60,0.2);
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .machine-location {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 1rem;
+        }
+
+        .machine-location i {
+            color: #4f9fff;
+            margin-right: 0.5rem;
+        }
+
+        .water-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .water-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f9fff, #a45eff);
+            border-radius: 5px;
+            transition: width 1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .water-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .cta-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px;
+            padding: 4rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .cta-card {
+                padding: 2rem;
+            }
+        }
+
+        .cta-card h2 {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            margin-bottom: 1rem;
+        }
+
+        .cta-card p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Footer - FULLY RESPONSIVE */
+        .footer {
+            padding: 3rem 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3rem;
+        }
+
+        @media (max-width: 1024px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                text-align: center;
+            }
+        }
+
+        .footer-col h4 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-col ul li a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-col ul li a:hover {
+            color: #4f9fff;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .social-links {
+                justify-content: center;
+            }
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: #4f9fff;
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Loading animation */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a1928;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 1s ease;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: #4f9fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading animation -->
+    <div class="loading" id="loading">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Custom cursor -->
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-follower" id="cursorFollower"></div>
+
+    <!-- Secret trigger for admin -->
+    <div class="secret-trigger" onclick="handleSecretTrigger()">
+        <i class="fas fa-cog"></i>
+    </div>
+
+    <!-- Animated shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">KOMAMANGA</div>
+        <button class="menu-btn" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-links" id="navLinks">
+            <a href="#home">Home</a>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#machines">Machines</a>
+            <a href="#contact">Contact</a>
+            <!-- Admin button - hidden by default -->
+            <a href="admin-login.html" class="admin-btn" id="adminLoginBtn" style="display: none;">
+                <i class="fas fa-user-shield"></i> Admin
+            </a>
+            <!-- User login button -->
+            <a href="user-login.html" class="btn-outline" style="padding: 0.5rem 1.5rem;">
+                <i class="fas fa-user"></i> User Login
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div class="container">
+        <!-- Hero section -->
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <span class="hero-badge">
+                        <i class="fas fa-bolt"></i> Smart Vending 2.0 <span style="color: #4f9fff;">TZS</span>
+                    </span>
+                    <h1 class="hero-title">
+                        Pure Water,<br>
+                        <span>Smartly Served</span>
+                    </h1>
+                    <p class="hero-description">
+                        Experience the future of water vending with Komamanga's intelligent machines. 
+                        Real-time monitoring in Tanzanian Shillings (TZS), automated collections, and seamless management.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#machines" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View Machines
+                        </a>
+                        <a href="user-login.html" class="btn btn-outline">
+                            <i class="fas fa-sign-in-alt"></i> User Login
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="floating-card">
+                        <div class="glass-sphere"></div>
+                        <div class="water-drop"></div>
+                        <div class="water-ripple"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats section - UPDATED to show only machine status -->
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalMachines">0</div>
+                <div class="stat-label">Machines Deployed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="activeMachines">0</div>
+                <div class="stat-label">
+                    <span class="stat-indicator indicator-online"></span> Active
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="offlineMachines">0</div>
+                <div class="stat-label">
+                    <span class="stat-indicator indicator-offline"></span> Offline
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="maintenanceMachines">0</div>
+                <div class="stat-label">
+                    <span class="stat-indicator indicator-maintenance"></span> Maintenance
+                </div>
+            </div>
+        </div>
+
+        <!-- Features section -->
+        <section id="features" class="features">
+            <h2 class="section-title">Why Choose Komamanga?</h2>
+            <div class="features-grid">
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h3>Smart Technology</h3>
+                    <p>ESP32-powered machines with real-time monitoring and instant data sync to Firebase.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Live Dashboard</h3>
+                    <p>Comprehensive analytics in TZS for authorized users with beautiful visualizations.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <h3>TZS Coin Support</h3>
+                    <p>Accepts 50, 100, 200, and 500 TZS coins with automated counting and collection alerts.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <h3>Water Quality</h3>
+                    <p>Multi-stage filtration with real-time quality monitoring and alerts.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Smart Alerts</h3>
+                    <p>Get notified about low water, full coin boxes, or maintenance needs.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h3>Easy Pairing</h3>
+                    <p>Scan QR code from ESP32 to add new machines with admin approval.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How it works -->
+        <section id="how-it-works" class="how-it-works">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Insert TZS Coin</h3>
+                    <p>Insert 50, 100, 200, or 500 TZS coins into any Komamanga machine</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Get Water</h3>
+                    <p>Fresh, filtered water is dispensed automatically</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Track Online</h3>
+                    <p>View all transactions and machine status in real-time with TZS amounts</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live machines preview -->
+        <section id="machines" class="live-preview">
+            <h2 class="section-title">Live Machine Status</h2>
+            <div class="machine-cards" id="machinePreviews">
+                <div style="text-align: center; padding: 3rem; grid-column: 1/-1;">
+                    <div class="loader" style="width: 50px; height: 50px; margin: 0 auto;"></div>
+                    <p>Loading machines...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="cta-card">
+                <h2>Ready to Go Smart?</h2>
+                <p>Join hundreds of Tanzanian businesses using Komamanga's smart water vending solutions</p>
+                <a href="#" class="btn btn-primary" style="padding: 1.2rem 3rem;">
+                    <i class="fas fa-calendar-check"></i> Schedule Demo
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h4>Komamanga Tanzania</h4>
+                    <p style="color: rgba(255,255,255,0.7); line-height: 1.8;">
+                        Smart water vending solutions for a better tomorrow. All amounts in Tanzanian Shillings (TZS).
+                    </p>
+                </div>
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#machines">Machines</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Account Access</h4>
+                    <ul>
+                        <li><a href="user-login.html">User Login</a></li>
+                        <li><a href="admin-login.html" id="footerAdminLink" style="display: none;">Admin Login</a></li>
+                        <li><a href="#">Register Interest</a></li>
+                        <li><a href="#">Contact Sales</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2026 Komamanga. All rights reserved. Smart Water Vending Solutions Tanzania.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVPL8RsRWWUHI4cenvmZ6HgIe4BEob9fM",
+            authDomain: "komamanga.firebaseapp.com",
+            projectId: "komamanga",
+            databaseURL: "https://komamanga-default-rtdb.firebaseio.com",
+            storageBucket: "komamanga.firebasestorage.app",
+            messagingSenderId: "909091747954",
+            appId: "1:909091747954:web:c8fa5a8af2d89e48e0aaeb"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Secret trigger for admin (tap 5 times)
+        let tapCount = 0;
+        let tapTimer;
+
+        function handleSecretTrigger() {
+            tapCount++;
+            
+            if (tapCount === 1) {
+                tapTimer = setTimeout(() => {
+                    tapCount = 0;
+                }, 3000);
+            }
+            
+            if (tapCount >= 5) {
+                clearTimeout(tapTimer);
+                tapCount = 0;
+                document.getElementById('adminLoginBtn').style.display = 'inline-block';
+                document.getElementById('footerAdminLink').style.display = 'inline-block';
+                alert('✨ Admin login is now available in the menu');
+            }
+        }
+
+        // Type "admin" on desktop
+        let keyBuffer = '';
+        document.addEventListener('keydown', (e) => {
+            keyBuffer += e.key.toLowerCase();
+            if (keyBuffer.length > 5) keyBuffer = keyBuffer.slice(-5);
+            
+            if (keyBuffer === 'admin') {
+                document.getElementById('adminLoginBtn').style.display = 'inline-block';
+                document.getElementById('footerAdminLink').style.display = 'inline-block';
+                keyBuffer = '';
+            }
+        });
+
+        // Toggle mobile menu
+        function toggleMenu() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+
+        // Close menu when clicking a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('navLinks').classList.remove('active');
+            });
+        });
+
+        // Loading animation
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loading').classList.add('hidden');
+            }, 1000);
+        });
+
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        const cursorFollower = document.getElementById('cursorFollower');
+
+        document.addEventListener('mousemove', function(e) {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursorFollower.style.left = e.clientX + 'px';
+            cursorFollower.style.top = e.clientY + 'px';
+        });
+
+        // Cursor hover effect
+        document.querySelectorAll('a, button, .feature-card, .machine-preview').forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                cursor.style.width = '30px';
+                cursor.style.height = '30px';
+                cursor.style.borderColor = '#4f9fff';
+                cursorFollower.style.width = '50px';
+                cursorFollower.style.height = '50px';
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                cursor.style.width = '20px';
+                cursor.style.height = '20px';
+                cursor.style.borderColor = 'rgba(255,255,255,0.5)';
+                cursorFollower.style.width = '40px';
+                cursorFollower.style.height = '40px';
+            });
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 3D tilt effect
+        document.querySelectorAll('[data-tilt]').forEach(card => {
+            card.addEventListener('mousemove', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                
+                this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+            });
+        });
+
+        // Get machine status based on lastUpdate
+        function getMachineStatus(machine) {
+            const now = Date.now();
+            const lastUpdate = machine.lastUpdate || 0;
+            
+            // If admin set to maintenance, show maintenance
+            if (machine.adminStatus === 'maintenance') {
+                return 'maintenance';
+            }
+            
+            // If no lastUpdate or it's been more than 5 minutes, show offline
+            if (lastUpdate === 0 || now - lastUpdate > 300000) { // 5 minutes
+                return 'offline';
+            }
+            
+            // Otherwise show online
+            return 'online';
+        }
+
+        // Load machines from Firebase
+        function loadMachines() {
+            const machinesRef = database.ref('machines');
+            
+            machinesRef.on('value', (snapshot) => {
+                const machines = snapshot.val();
+                const container = document.getElementById('machinePreviews');
+                
+                // Counters for stats
+                let totalCount = 0;
+                let onlineCount = 0;
+                let offlineCount = 0;
+                let maintenanceCount = 0;
+                
+                if (!machines || Object.keys(machines).length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; grid-column: 1/-1;">
+                            <i class="fas fa-water" style="font-size: 4rem; opacity: 0.5; margin-bottom: 1rem;"></i>
+                            <h3>No Machines Yet</h3>
+                            <p style="color: rgba(255,255,255,0.7);">Our first machines are coming soon!</p>
+                        </div>
+                    `;
+                    
+                    // Update stats with zeros
+                    document.getElementById('totalMachines').textContent = '0';
+                    document.getElementById('activeMachines').textContent = '0';
+                    document.getElementById('offlineMachines').textContent = '0';
+                    document.getElementById('maintenanceMachines').textContent = '0';
+                    return;
+                }
+
+                let machinesHtml = '';
+
+                Object.keys(machines).forEach(machineId => {
+                    const machine = machines[machineId];
+                    totalCount++;
+                    
+                    // Get machine status
+                    const status = getMachineStatus(machine);
+                    
+                    // Update counters
+                    if (status === 'online') onlineCount++;
+                    else if (status === 'maintenance') maintenanceCount++;
+                    else offlineCount++;
+
+                    let statusClass = '';
+                    let statusText = '';
+                    
+                    if (status === 'online') {
+                        statusClass = 'online';
+                        statusText = '● LIVE';
+                    } else if (status === 'maintenance') {
+                        statusClass = 'maintenance';
+                        statusText = '🔧 MAINTENANCE';
+                    } else {
+                        statusClass = 'offline';
+                        statusText = '○ OFFLINE';
+                    }
+
+                    machinesHtml += `
+                        <div class="machine-preview">
+                            <div class="machine-header">
+                                <h3>${machine.name || machineId}</h3>
+                                <span class="machine-status ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="machine-location">
+                                <i class="fas fa-map-marker-alt"></i> ${machine.location || 'Location not set'}
+                            </div>
+                            <div class="water-bar">
+                                <div class="water-fill" style="width: ${machine.waterLevel || 0}%"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 1rem; color: rgba(255,255,255,0.7);">
+                                <span><i class="fas fa-tint"></i> Level: ${machine.waterLevel || 0}%</span>
+                                <span><i class="fas fa-clock"></i> Last: ${machine.lastUpdate ? new Date(machine.lastUpdate).toLocaleTimeString() : 'Never'}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = machinesHtml;
+                
+                // Update stats
+                document.getElementById('totalMachines').textContent = totalCount;
+                document.getElementById('activeMachines').textContent = onlineCount;
+                document.getElementById('offlineMachines').textContent = offlineCount;
+                document.getElementById('maintenanceMachines').textContent = maintenanceCount;
+                
+            }, (error) => {
+                console.error('Firebase error:', error);
+            });
+        }
+
+        // Parallax effect
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            document.querySelector('.shape-1').style.transform = `translateY(${scrolled * 0.3}px)`;
+            document.querySelector('.shape-2').style.transform = `translateY(${scrolled * -0.2}px)`;
+        });
+
+        // Water drop ripple effect
+        document.addEventListener('click', function(e) {
+            const ripple = document.createElement('div');
+            ripple.style.position = 'fixed';
+            ripple.style.width = '20px';
+            ripple.style.height = '20px';
+            ripple.style.background = 'radial-gradient(circle, #4f9fff, transparent)';
+            ripple.style.borderRadius = '50%';
+            ripple.style.left = e.clientX - 10 + 'px';
+            ripple.style.top = e.clientY - 10 + 'px';
+            ripple.style.pointerEvents = 'none';
+            ripple.style.zIndex = '9999';
+            ripple.style.animation = 'ripple 1s ease-out';
+            document.body.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 1000);
+        });
+
+        // Start loading machines
+        loadMachines();
+    </script>
+</body>
+</html>
