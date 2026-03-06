@@ -1478,3 +1478,1748 @@
     </script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komamanga | Smart Water Vending Solutions</title>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        /* YOUR ORIGINAL CSS - COMPLETELY UNCHANGED */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; /* Hide default cursor for custom effect */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0a1928 0%, #1a3a5f 100%);
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Custom cursor */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.1s ease;
+            transition-property: width, height, border;
+            transform: translate(-50%, -50%);
+            backdrop-filter: blur(2px);
+        }
+
+        .cursor-follower {
+            width: 40px;
+            height: 40px;
+            background: rgba(79, 159, 255, 0.2);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Animated background shapes */
+        .shape {
+            position: fixed;
+            background: rgba(79, 159, 255, 0.1);
+            filter: blur(60px);
+            border-radius: 50%;
+            z-index: -1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+            background: linear-gradient(45deg, #4f9fff, #a45eff);
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            width: 500px;
+            height: 500px;
+            bottom: -200px;
+            right: -100px;
+            background: linear-gradient(135deg, #00d4ff, #4f9fff);
+            animation-delay: -5s;
+        }
+
+        .shape-3 {
+            width: 400px;
+            height: 400px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, #ff6b6b, #ffd93d);
+            opacity: 0.05;
+            animation: pulse 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.05; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.1; }
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideDown 1s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -100%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #4f9fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+            padding: 0.5rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4f9fff, #a45eff);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::before {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            text-shadow: 0 0 10px rgba(79, 159, 255, 0.5);
+        }
+
+        .admin-btn {
+            background: rgba(79, 159, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.8rem 1.8rem !important;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+        }
+
+        .admin-btn:hover {
+            background: rgba(79, 159, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* User info for logged in admins */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-email {
+            color: #4f9fff;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Main content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            padding-top: 80px;
+        }
+
+        .hero-text {
+            animation: fadeInLeft 1.5s ease-out;
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 2s ease-out;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .hero-title span {
+            background: linear-gradient(135deg, #fff, #4f9fff, #a45eff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(79, 159, 255, 0.3)); }
+            50% { filter: drop-shadow(0 0 40px rgba(79, 159, 255, 0.6)); }
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f9fff, #a45eff);
+            color: white;
+            box-shadow: 0 10px 20px rgba(79, 159, 255, 0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(79, 159, 255, 0.4);
+        }
+
+        .btn-outline {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+            border-color: #4f9fff;
+        }
+
+        /* Hero image with 3D effect */
+        .hero-image {
+            position: relative;
+            animation: fadeInRight 1.5s ease-out;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .floating-card {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            transform-style: preserve-3d;
+            animation: floatCard 6s ease-in-out infinite;
+        }
+
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-20px) rotateY(5deg); }
+        }
+
+        .glass-sphere {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(79,159,255,0.2));
+            border-radius: 50%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 
+                0 30px 50px rgba(0,0,0,0.3),
+                inset 0 0 30px rgba(255,255,255,0.2);
+        }
+
+        .water-drop {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #4f9fff, #a45eff);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            bottom: 20%;
+            right: 10%;
+            animation: dropFloat 3s ease-in-out infinite;
+            box-shadow: 0 20px 30px rgba(79,159,255,0.3);
+        }
+
+        @keyframes dropFloat {
+            0%, 100% { transform: rotate(-45deg) translateY(0); }
+            50% { transform: rotate(-45deg) translateY(-20px); }
+        }
+
+        .water-ripple {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            bottom: 15%;
+            right: 5%;
+            animation: ripple 3s ease-out infinite;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Stats section - NOW WITH REAL DATA */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin: 6rem 0;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+        }
+
+        .stat-item {
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #4f9fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            letter-spacing: 2px;
+        }
+
+        /* Features section */
+        .features {
+            padding: 6rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, #4f9fff, #a45eff);
+            border-radius: 3px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(79,159,255,0.1), rgba(164,94,255,0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(79,159,255,0.2), rgba(164,94,255,0.2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-icon i {
+            background: linear-gradient(135deg, #fff, #4f9fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* How it works */
+        .how-it-works {
+            padding: 6rem 0;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            position: relative;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #4f9fff, #a45eff, #4f9fff, transparent);
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            background: rgba(10, 25, 40, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4f9fff, #a45eff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 10px 20px rgba(79,159,255,0.3);
+        }
+
+        /* Live machines preview - NOW WITH REAL DATA */
+        .live-preview {
+            padding: 6rem 0;
+        }
+
+        .machine-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .machine-preview {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .machine-preview:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+            border-color: #4f9fff;
+        }
+
+        .machine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .machine-status {
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .machine-status.online {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        .machine-status.maintenance {
+            background: rgba(241, 196, 15, 0.2);
+            border: 1px solid #f1c40f;
+            color: #f1c40f;
+        }
+
+        .machine-status.offline {
+            background: rgba(231, 76, 60, 0.2);
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .water-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .water-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f9fff, #a45eff);
+            border-radius: 5px;
+            transition: width 1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .water-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Loading state */
+        .loading-machines {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #4f9fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty state */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .cta-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 4rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-card h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-card p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 3rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3rem;
+        }
+
+        .footer-col h4 {
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-col ul li a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-col ul li a:hover {
+            color: #4f9fff;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: #4f9fff;
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Modal styles for login/register/add device */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 3rem;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            animation: modalPop 0.3s ease-out;
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal h2 {
+            margin-bottom: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .modal-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #4f9fff;
+        }
+
+        .modal-select {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .modal-select option {
+            background: #1a3a5f;
+        }
+
+        .modal-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #4f9fff, #a45eff);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .modal-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .modal-footer {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .modal-footer a {
+            color: #4f9fff;
+            text-decoration: none;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .steps::before {
+                display: none;
+            }
+
+            .machine-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .navbar {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a1928;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #4f9fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading animation -->
+    <div class="loading" id="loading">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Custom cursor -->
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-follower" id="cursorFollower"></div>
+
+    <!-- Animated background shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">KOMAMANGA</div>
+        <div class="nav-links">
+            <a href="#home">Home</a>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#machines">Machines</a>
+            <a href="#contact">Contact</a>
+            <div id="userInfo" style="display: none;" class="user-info">
+                <span class="user-email" id="userEmail"></span>
+                <span class="logout-btn" onclick="logout()">Logout</span>
+            </div>
+            <a href="#" class="admin-btn" onclick="showLoginModal()" id="loginBtn">
+                <i class="fas fa-user-shield"></i> Admin
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div class="container">
+        <!-- Hero section -->
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <span class="hero-badge">
+                        <i class="fas fa-bolt"></i> Smart Vending 2.0
+                    </span>
+                    <h1 class="hero-title">
+                        Pure Water,<br>
+                        <span>Smartly Served</span>
+                    </h1>
+                    <p class="hero-description">
+                        Experience the future of water vending with Komamanga's intelligent machines. 
+                        Real-time monitoring, automated collections, and seamless management.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#machines" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View Live Machines
+                        </a>
+                        <a href="#" class="btn btn-outline">
+                            <i class="fas fa-play"></i> Watch Demo
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="floating-card">
+                        <div class="glass-sphere"></div>
+                        <div class="water-drop"></div>
+                        <div class="water-ripple"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats section - NOW WITH REAL FIREBASE DATA -->
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalMachines">0</div>
+                <div class="stat-label">Machines Deployed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="dailyLiters">0</div>
+                <div class="stat-label">Liters Today</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="uptime">0%</div>
+                <div class="stat-label">Uptime</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="support">24/7</div>
+                <div class="stat-label">Support</div>
+            </div>
+        </div>
+
+        <!-- Features section -->
+        <section id="features" class="features">
+            <h2 class="section-title">Why Choose Komamanga?</h2>
+            <div class="features-grid">
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h3>Smart Technology</h3>
+                    <p>ESP32-powered machines with real-time monitoring and instant data sync to Firebase.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Live Dashboard</h3>
+                    <p>Comprehensive analytics with beautiful visualizations and instant alerts.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <h3>Auto Collection</h3>
+                    <p>Automated coin counting and collection alerts with detailed transaction history.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <h3>Water Quality</h3>
+                    <p>Multi-stage filtration with real-time quality monitoring and alerts.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Smart Alerts</h3>
+                    <p>Get notified about low water, full coin boxes, or maintenance needs.</p>
+                </div>
+                <div class="feature-card" data-tilt>
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure System</h3>
+                    <p>Bank-level encryption for all transactions and admin access.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How it works -->
+        <section id="how-it-works" class="how-it-works">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Insert Coin</h3>
+                    <p>Simply insert coins into any Komamanga machine</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Get Water</h3>
+                    <p>Fresh, filtered water is dispensed automatically</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Track Online</h3>
+                    <p>View all transactions and machine status in real-time</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live machines preview - NOW WITH REAL FIREBASE DATA -->
+        <section id="machines" class="live-preview">
+            <h2 class="section-title">Live Machine Status</h2>
+            <div class="machine-cards" id="machinePreviews">
+                <!-- Will be populated with REAL Firebase data -->
+                <div class="loading-machines">
+                    <div class="spinner"></div>
+                    <p>Connecting to Komamanga network...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="cta-card">
+                <h2>Ready to Go Smart?</h2>
+                <p>Join hundreds of businesses using Komamanga's smart water vending solutions</p>
+                <a href="#" class="btn btn-primary" style="padding: 1.2rem 3rem;">
+                    <i class="fas fa-calendar-check"></i> Schedule Demo
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h4>Komamanga</h4>
+                    <p style="color: rgba(255,255,255,0.7); line-height: 1.8;">
+                        Smart water vending solutions for a better tomorrow.
+                    </p>
+                </div>
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#machines">Machines</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Reference</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2026 Komamanga. All rights reserved. Smart Water Vending Solutions.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideLoginModal()">&times;</span>
+            <h2>Admin Login</h2>
+            <div id="loginError" class="error-message"></div>
+            <input type="email" id="loginEmail" class="modal-input" placeholder="Email" required>
+            <input type="password" id="loginPassword" class="modal-input" placeholder="Password" required>
+            <button class="modal-button" onclick="login()">Login</button>
+            <div class="modal-footer">
+                <a href="#" onclick="showRegisterModal()">Create Account</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideRegisterModal()">&times;</span>
+            <h2>Create Account</h2>
+            <div id="registerError" class="error-message"></div>
+            <input type="text" id="registerName" class="modal-input" placeholder="Full Name" required>
+            <input type="email" id="registerEmail" class="modal-input" placeholder="Email" required>
+            <input type="password" id="registerPassword" class="modal-input" placeholder="Password" required>
+            <button class="modal-button" onclick="register()">Register</button>
+            <div class="modal-footer">
+                <a href="#" onclick="showLoginModal()">Back to Login</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Device Modal (Admin Only) -->
+    <div class="modal" id="addDeviceModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideAddDeviceModal()">&times;</span>
+            <h2><i class="fas fa-plus-circle"></i> Add New Machine</h2>
+            <div id="addError" class="error-message"></div>
+            
+            <input type="text" id="deviceId" class="modal-input" placeholder="Machine ID (e.g., MACHINE_001)" required>
+            <input type="text" id="deviceName" class="modal-input" placeholder="Machine Name" required>
+            <input type="text" id="deviceLocation" class="modal-input" placeholder="Location" required>
+            <select id="deviceStatus" class="modal-select">
+                <option value="online">Online (Active)</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="offline">Offline</option>
+            </select>
+            
+            <button class="modal-button" onclick="addDevice()">
+                <i class="fas fa-save"></i> Add Machine
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration - YOUR ACTUAL CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVPL8RsRWWUHI4cenvmZ6HgIe4BEob9fM",
+            authDomain: "komamanga.firebaseapp.com",
+            projectId: "komamanga",
+            databaseURL: "https://komamanga-default-rtdb.firebaseio.com",
+            storageBucket: "komamanga.firebasestorage.app",
+            messagingSenderId: "909091747954",
+            appId: "1:909091747954:web:c8fa5a8af2d89e48e0aaeb",
+            measurementId: "G-S1V1WFPV8Q"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // Loading animation
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loading').classList.add('hidden');
+            }, 1000);
+        });
+
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        const cursorFollower = document.getElementById('cursorFollower');
+
+        document.addEventListener('mousemove', function(e) {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            cursorFollower.style.left = e.clientX + 'px';
+            cursorFollower.style.top = e.clientY + 'px';
+        });
+
+        // Cursor hover effect
+        document.querySelectorAll('a, button, .feature-card, .machine-preview').forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                cursor.style.width = '30px';
+                cursor.style.height = '30px';
+                cursor.style.borderColor = '#4f9fff';
+                cursorFollower.style.width = '50px';
+                cursorFollower.style.height = '50px';
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                cursor.style.width = '20px';
+                cursor.style.height = '20px';
+                cursor.style.borderColor = 'rgba(255,255,255,0.5)';
+                cursorFollower.style.width = '40px';
+                cursorFollower.style.height = '40px';
+            });
+        });
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 3D tilt effect
+        document.querySelectorAll('[data-tilt]').forEach(card => {
+            card.addEventListener('mousemove', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                
+                this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+            });
+        });
+
+        // 🔥 LOAD REAL MACHINES FROM FIREBASE
+        function loadMachinesFromFirebase() {
+            const machinesRef = database.ref('machines');
+            
+            machinesRef.on('value', (snapshot) => {
+                const machines = snapshot.val();
+                const container = document.getElementById('machinePreviews');
+                
+                // Show loading state
+                if (!machines || Object.keys(machines).length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-water"></i>
+                            <h3>No Machines Yet</h3>
+                            <p>Our first smart water vending machines are coming soon!</p>
+                        </div>
+                    `;
+                    
+                    // Update stats
+                    document.getElementById('totalMachines').textContent = '0';
+                    document.getElementById('dailyLiters').textContent = '0';
+                    document.getElementById('uptime').textContent = '0%';
+                    return;
+                }
+
+                let totalActive = 0;
+                let totalLiters = 0;
+
+                // Build HTML for each machine
+                let machinesHtml = '';
+                Object.keys(machines).forEach(machineId => {
+                    const machine = machines[machineId];
+                    
+                    // Update totals
+                    if (machine.status === 'online') totalActive++;
+                    totalLiters += machine.waterSoldToday || 0;
+
+                    machinesHtml += `
+                        <div class="machine-preview" onclick="viewMachineDetails('${machineId}')">
+                            <div class="machine-header">
+                                <h3>${machine.name || machineId}</h3>
+                                <span class="machine-status ${machine.status || 'offline'}">
+                                    ${machine.status === 'online' ? '● Live' : '○ ' + (machine.status || 'offline')}
+                                </span>
+                            </div>
+                            <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">
+                                <i class="fas fa-map-marker-alt"></i> ${machine.location || 'Location not set'}
+                            </p>
+                            <div class="water-bar">
+                                <div class="water-fill" style="width: ${machine.waterLevel || 0}%"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+                                <span><i class="fas fa-tint"></i> ${machine.waterLevel || 0}% full</span>
+                                <span><i class="fas fa-dollar-sign"></i> ${(machine.revenueToday || 0).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Add empty slots for visual balance (optional)
+                const machineCount = Object.keys(machines).length;
+                if (machineCount === 1) {
+                    machinesHtml += `
+                        <div class="machine-preview" style="opacity: 0.3; border: 2px dashed rgba(255,255,255,0.2);">
+                            <div style="display: flex; align-items: center; justify-content: center; height: 200px;">
+                                <p>More machines coming soon</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = machinesHtml;
+
+                // Update stats
+                document.getElementById('totalMachines').textContent = Object.keys(machines).length;
+                document.getElementById('dailyLiters').textContent = totalLiters;
+                
+                // Calculate uptime
+                const totalMachines = Object.keys(machines).length;
+                const uptime = totalMachines > 0 ? Math.round((totalActive / totalMachines) * 100) : 0;
+                document.getElementById('uptime').textContent = uptime + '%';
+
+            }, (error) => {
+                console.error('Firebase error:', error);
+                document.getElementById('machinePreviews').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Connection Error</h3>
+                        <p>Unable to connect to Komamanga network. Please refresh.</p>
+                    </div>
+                `;
+            });
+        }
+
+        // View machine details (for future)
+        function viewMachineDetails(machineId) {
+            if (auth.currentUser) {
+                alert('Machine details page coming soon!');
+            }
+        }
+
+        // Auth state observer
+        auth.onAuthStateChanged((user) => {
+            const loginBtn = document.getElementById('loginBtn');
+            const userInfo = document.getElementById('userInfo');
+            const userEmail = document.getElementById('userEmail');
+            
+            if (user) {
+                // User is logged in
+                loginBtn.style.display = 'none';
+                userInfo.style.display = 'flex';
+                userEmail.textContent = user.email;
+                
+                // Add "Add Device" button to nav if not already there
+                const navLinks = document.querySelector('.nav-links');
+                if (!document.getElementById('addDeviceNavBtn')) {
+                    const addBtn = document.createElement('a');
+                    addBtn.href = '#';
+                    addBtn.id = 'addDeviceNavBtn';
+                    addBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Device';
+                    addBtn.onclick = (e) => {
+                        e.preventDefault();
+                        showAddDeviceModal();
+                    };
+                    // Insert before the user info
+                    navLinks.insertBefore(addBtn, userInfo);
+                }
+            } else {
+                // User is logged out
+                loginBtn.style.display = 'block';
+                userInfo.style.display = 'none';
+                
+                // Remove add device button
+                const addBtn = document.getElementById('addDeviceNavBtn');
+                if (addBtn) addBtn.remove();
+            }
+        });
+
+        // Login function
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                hideLoginModal();
+                errorDiv.textContent = '';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        // Register function
+        async function register() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorDiv = document.getElementById('registerError');
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({ displayName: name });
+                
+                // Save to database
+                await database.ref('users/' + userCredential.user.uid).set({
+                    name: name,
+                    email: email,
+                    createdAt: Date.now()
+                });
+                
+                hideRegisterModal();
+                showLoginModal();
+                errorDiv.textContent = '';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        // Add device function
+        async function addDevice() {
+            const deviceId = document.getElementById('deviceId').value.trim();
+            const deviceName = document.getElementById('deviceName').value.trim();
+            const deviceLocation = document.getElementById('deviceLocation').value.trim();
+            const deviceStatus = document.getElementById('deviceStatus').value;
+            const errorDiv = document.getElementById('addError');
+
+            if (!deviceId || !deviceName || !deviceLocation) {
+                errorDiv.textContent = 'All fields are required';
+                return;
+            }
+
+            // Check if ID exists
+            const snapshot = await database.ref('machines/' + deviceId).once('value');
+            if (snapshot.exists()) {
+                errorDiv.textContent = 'Machine ID already exists';
+                return;
+            }
+
+            try {
+                await database.ref('machines/' + deviceId).set({
+                    name: deviceName,
+                    location: deviceLocation,
+                    status: deviceStatus,
+                    waterLevel: 100,
+                    waterSoldToday: 0,
+                    revenueToday: 0,
+                    lastUpdate: Date.now(),
+                    createdAt: Date.now()
+                });
+
+                // Clear and close
+                document.getElementById('deviceId').value = '';
+                document.getElementById('deviceName').value = '';
+                document.getElementById('deviceLocation').value = '';
+                hideAddDeviceModal();
+                alert('✅ Machine added successfully!');
+
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        // Logout
+        function logout() {
+            auth.signOut();
+        }
+
+        // Modal functions
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('loginError').textContent = '';
+        }
+
+        function showRegisterModal() {
+            hideLoginModal();
+            document.getElementById('registerModal').classList.add('active');
+        }
+
+        function hideRegisterModal() {
+            document.getElementById('registerModal').classList.remove('active');
+            document.getElementById('registerError').textContent = '';
+        }
+
+        function showAddDeviceModal() {
+            document.getElementById('addDeviceModal').classList.add('active');
+        }
+
+        function hideAddDeviceModal() {
+            document.getElementById('addDeviceModal').classList.remove('active');
+            document.getElementById('addError').textContent = '';
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        // Parallax effect
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            document.querySelector('.shape-1').style.transform = `translateY(${scrolled * 0.3}px)`;
+            document.querySelector('.shape-2').style.transform = `translateY(${scrolled * -0.2}px)`;
+        });
+
+        // Water drop ripple effect
+        document.addEventListener('click', function(e) {
+            const ripple = document.createElement('div');
+            ripple.style.position = 'fixed';
+            ripple.style.width = '20px';
+            ripple.style.height = '20px';
+            ripple.style.background = 'radial-gradient(circle, #4f9fff, transparent)';
+            ripple.style.borderRadius = '50%';
+            ripple.style.left = e.clientX - 10 + 'px';
+            ripple.style.top = e.clientY - 10 + 'px';
+            ripple.style.pointerEvents = 'none';
+            ripple.style.zIndex = '9999';
+            ripple.style.animation = 'ripple 1s ease-out';
+            document.body.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 1000);
+        });
+
+        // Start loading machines
+        loadMachinesFromFirebase();
+    </script>
+</body>
+</html>
+>>>>>>> 688bfed71dcc52b15f9a65772017d1ecb2359200
