@@ -454,7 +454,7 @@
             100% { transform: scale(1.5); opacity: 0; }
         }
 
-        /* Stats section - showing only machine status */
+        /* Stats section - showing only machine status with colored indicators */
         .stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -499,31 +499,50 @@
             color: rgba(255,255,255,0.7);
             font-size: clamp(0.8rem, 3vw, 1rem);
             letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
 
-        /* Status indicators */
+        /* Status indicators - REDUCED GLOW EFFECT */
         .stat-indicator {
             display: inline-block;
             width: 10px;
             height: 10px;
             border-radius: 50%;
             margin-right: 5px;
-            animation: pulse 2s infinite;
+            animation: gentlePulse 2s infinite;
         }
 
         .indicator-online {
             background: #2ecc71;
-            box-shadow: 0 0 10px #2ecc71;
+            box-shadow: 0 0 5px #2ecc71;  /* Reduced from 15px to 5px */
         }
 
         .indicator-offline {
             background: #e74c3c;
-            box-shadow: 0 0 10px #e74c3c;
+            box-shadow: 0 0 5px #e74c3c;  /* Reduced from 15px to 5px */
         }
 
         .indicator-maintenance {
             background: #f1c40f;
-            box-shadow: 0 0 10px #f1c40f;
+            box-shadow: 0 0 5px #f1c40f;  /* Reduced from 15px to 5px */
+        }
+
+        @keyframes gentlePulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.05);  /* Reduced from 1.1 to 1.05 */
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         /* Info note */
@@ -1047,7 +1066,7 @@
             <a href="user-login.html" style="color: #4f9fff;">Login</a> to see prices and detailed analytics.
         </div>
 
-        <!-- Stats section - showing only machine status -->
+        <!-- Stats section - showing only machine status with colored indicators -->
         <div class="stats">
             <div class="stat-item">
                 <div class="stat-number" id="totalMachines">0</div>
@@ -1217,9 +1236,9 @@
         </div>
     </footer>
 
-    <!-- ALL JAVASCRIPT IN ONE SINGLE BLOCK - NO MORE REDECLARATION ERRORS -->
+    <!-- ALL JAVASCRIPT IN ONE SINGLE BLOCK -->
     <script>
-        // ============== FIREBASE CONFIG (ONCE) ==============
+        // ============== FIREBASE CONFIG ==============
         const firebaseConfig = {
             apiKey: "AIzaSyBVPL8RsRWWUHI4cenvmZ6HgIe4BEob9fM",
             authDomain: "komamanga.firebaseapp.com",
@@ -1230,11 +1249,11 @@
             appId: "1:909091747954:web:c8fa5a8af2d89e48e0aaeb"
         };
 
-        // Initialize Firebase (ONCE)
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // ============== DOM ELEMENTS (ONCE) ==============
+        // ============== DOM ELEMENTS ==============
         const cursor = document.getElementById('cursor');
         const cursorFollower = document.getElementById('cursorFollower');
         const loading = document.getElementById('loading');
